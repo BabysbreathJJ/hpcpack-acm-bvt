@@ -1,0 +1,25 @@
+<testsuites name="Mocha Tests">
+  <testsuite name="Diag" tests="4" errors="0" failures="1" skipped="0" timestamp="2018-06-03T12:12:29" time="180.977">
+    <testcase classname="Diag" name="should have nodes data" time="0.002">
+    </testcase>
+    <testcase classname="Diag" name="should return diag tests list" time="0.151">
+    </testcase>
+    <testcase classname="Diag" name="should create a new diag test" time="0.358">
+    </testcase>
+    <testcase classname="Diag" name="should finish a diag test of 4 nodes in 3 minutes" time="0">
+      <failure message="expected &apos;Failed&apos; to equal &apos;Finished&apos;">+Finished
+-Failed
+
+    at Test.diagApi.get.set.end (test/diags.js:70:44)
+    at Test.assert (node_modules/supertest/lib/test.js:181:6)
+    at assert (node_modules/supertest/lib/test.js:131:12)
+    at /Users/Lijingjing/dev/hpc-rest-bvt/node_modules/supertest/lib/test.js:128:5
+    at Test.Request.callback (node_modules/superagent/lib/node/index.js:706:12)
+    at parser (node_modules/superagent/lib/node/index.js:906:18)
+    at IncomingMessage.res.on.e (node_modules/superagent/lib/node/parsers/json.js:19:7)
+    at endReadableNT (_stream_readable.js:974:12)
+    at _combinedTickCallback (internal/process/next_tick.js:74:11)
+    at process._tickCallback (internal/process/next_tick.js:98:9)</failure>
+    </testcase>
+  </testsuite>
+</testsuites>
