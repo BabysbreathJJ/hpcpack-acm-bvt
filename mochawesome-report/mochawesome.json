@@ -5,9 +5,9 @@
     "passes": 4,
     "pending": 0,
     "failures": 0,
-    "start": "2018-06-04T08:04:14.202Z",
-    "end": "2018-06-04T08:05:45.462Z",
-    "duration": 91260,
+    "start": "2018-06-04T08:23:37.867Z",
+    "end": "2018-06-04T08:25:29.097Z",
+    "duration": 111230,
     "testsRegistered": 4,
     "passPercent": 100,
     "pendingPercent": 0,
@@ -19,7 +19,7 @@
     "pendingPercentClass": "danger"
   },
   "suites": {
-    "uuid": "db72c7ce-5fbf-4100-82bb-30a9fae8575c",
+    "uuid": "1bb76d4e-fde4-4aa0-a1d1-ebff26b61414",
     "title": "",
     "fullFile": "",
     "file": "",
@@ -28,7 +28,7 @@
     "tests": [],
     "suites": [
       {
-        "uuid": "357ad4cc-b932-4446-9d23-b00998445507",
+        "uuid": "68eaf3d5-2eab-4158-a041-af21567d4268",
         "title": "Diag",
         "fullFile": "D:\\api-testing\\test\\diags.js",
         "file": "\\test\\diags.js",
@@ -37,14 +37,14 @@
             "title": "\"before all\" hook",
             "fullTitle": "Diag \"before all\" hook",
             "timedOut": false,
-            "duration": 408,
+            "duration": 396,
             "pass": false,
             "fail": false,
             "pending": false,
             "code": "api.get('/nodes')\n    .set('Accept', 'application/json')\n    .end((err, res) => {\n        res.body.forEach(e => {\n            if (e.health == 'OK') {\n                nodes.push(e.id);\n            }\n        });\n        done();\n    });",
             "err": {},
             "isRoot": false,
-            "uuid": "75f34f9f-f8e2-47c5-ba28-8a9824cf48cf",
+            "uuid": "dd457712-6178-4b4e-b38a-e60d04f7b4b0",
             "isHook": true,
             "skipped": false
           }
@@ -64,7 +64,7 @@
             "code": "assert.isNotEmpty(nodes);\ndone();",
             "err": {},
             "isRoot": false,
-            "uuid": "11c4ee4b-d367-443e-b7f1-4d00d9578b48",
+            "uuid": "da696f13-ed38-4e91-a075-ba8bcf5837ef",
             "isHook": false,
             "skipped": false
           },
@@ -72,7 +72,7 @@
             "title": "should return diag tests list",
             "fullTitle": "Diag should return diag tests list",
             "timedOut": false,
-            "duration": 234,
+            "duration": 233,
             "state": "passed",
             "speed": "slow",
             "pass": true,
@@ -81,7 +81,7 @@
             "code": "diagApi.get('/tests')\n    .set('Accept', 'application/json')\n    .end((err, res) => {\n        assert.isArray(res.body);\n        if (res.body.length > 0) {\n            pingpong = res.body.find((e) => {\n                return e.name == 'pingpong';\n            });\n            pingpong.arguments = \"[]\";\n            ring = res.body.find((e) => {\n                return e.name == 'ring';\n            });\n            ring.arguments = \"[]\";\n        }\n        done();\n    });",
             "err": {},
             "isRoot": false,
-            "uuid": "882ae3ac-9e23-4083-b155-e6892b2308a1",
+            "uuid": "0f2e438f-0748-4b46-827a-47eb200faa65",
             "isHook": false,
             "skipped": false
           },
@@ -89,7 +89,7 @@
             "title": "should create a new pingpong diag test",
             "fullTitle": "Diag should create a new pingpong diag test",
             "timedOut": false,
-            "duration": 272,
+            "duration": 339,
             "state": "passed",
             "speed": "slow",
             "pass": true,
@@ -98,7 +98,7 @@
             "code": "if (nodes.length > 4) {\n    nodes = nodes.slice(0, 4);\n}\ndiagApi.post('')\n    .set('Accept', 'application/json')\n    .send({\n        name: 'diag-BVT-test',\n        targetNodes: nodes,\n        jobType: 'diagnostics',\n        diagnosticTest: pingpong\n    })\n    .expect(201)\n    .end((err, res) => {\n        expect(res.headers.location).to.include('/v1/diagnostics/');\n        let locationData = res.headers.location.split('/');\n        jobId = locationData[locationData.length - 1];\n        done();\n    });",
             "err": {},
             "isRoot": false,
-            "uuid": "f21b2883-4862-434e-9ace-073faac1d2b2",
+            "uuid": "1969b146-0a98-4645-891b-26d76cb73993",
             "isHook": false,
             "skipped": false
           },
@@ -106,7 +106,7 @@
             "title": "should get a pinpong diag test result before timeout",
             "fullTitle": "Diag should get a pinpong diag test result before timeout",
             "timedOut": false,
-            "duration": 90329,
+            "duration": 110243,
             "state": "passed",
             "speed": "slow",
             "pass": true,
@@ -115,22 +115,22 @@
             "code": "let startTime = new Date();\ntimeout = nodes.length * 30000;\nconsole.log(timeout);\nlet loop = Loop.start(\n    diagBaseUrl + '/' + jobId,\n    {\n        next: (result) => {\n            result = JSON.parse(result);\n            console.log(result.state);\n            let endTime = new Date();\n            let elapseTime = endTime - startTime;\n            if (result.state == 'Finished') {\n                assert.ok(result.state === 'Finished', 'pingpong diag test finished in ' + elapseTime + ' ms.');\n                done();\n                return false;\n            }\n            else if (result.state == 'Failed') {\n                assert.ok(result.state === 'Failed', 'pingpong diag test faied in ' + elapseTime + ' ms.');\n                done();\n                return false;\n            }\n            if (elapseTime > timeout) {\n                assert.fail(\"actual runtime \" + elapseTime + ' ms', \"expected time \" + timeout + ' ms', \"The pingpong diag test doesn't finished in expected time, time elapses: \" + elapseTime + ' ms, the max time is ' + timeout + ' ms');\n                done();\n                return false;\n            }\n            return true;\n        }\n    },\n    10000\n);",
             "err": {},
             "isRoot": false,
-            "uuid": "d0b12efe-ecfd-4fea-9a88-9bdef6c076f0",
+            "uuid": "259c304a-91f8-4ee1-b9b7-4e3b330eea64",
             "isHook": false,
             "skipped": false
           }
         ],
         "suites": [],
         "passes": [
-          "11c4ee4b-d367-443e-b7f1-4d00d9578b48",
-          "882ae3ac-9e23-4083-b155-e6892b2308a1",
-          "f21b2883-4862-434e-9ace-073faac1d2b2",
-          "d0b12efe-ecfd-4fea-9a88-9bdef6c076f0"
+          "da696f13-ed38-4e91-a075-ba8bcf5837ef",
+          "0f2e438f-0748-4b46-827a-47eb200faa65",
+          "1969b146-0a98-4645-891b-26d76cb73993",
+          "259c304a-91f8-4ee1-b9b7-4e3b330eea64"
         ],
         "failures": [],
         "pending": [],
         "skipped": [],
-        "duration": 90836,
+        "duration": 110816,
         "root": false,
         "rootEmpty": false,
         "_timeout": 0
