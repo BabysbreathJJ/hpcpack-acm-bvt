@@ -1,21 +1,21 @@
 {
-  "name": "api-testing",
+  "name": "hpc-rest-api-testing",
   "version": "1.0.0",
-  "description": "HPC API Testing",
-  "author": "JIngjing Li",
+  "description": "HPC-ACM REST API Testing",
+  "author": "Jingjing Li",
   "dependencies": {
     "body-parser": "^1.18.3",
     "chai": "^4.1.2",
     "mocha": "^5.2.0",
-    "mocha-jenkins-reporter": "^0.3.12",
     "supertest": "^3.1.0"
   },
   "scripts": {
-    "prestart": "npm install;",
+    "prestart": "npm install",
     "start": "mocha test/diags.js --reporter mochawesome"
   },
   "devDependencies": {
     "chakram": "^1.5.0",
-    "mochawesome": "^3.0.2"
+    "mochawesome": "^3.0.2",
+    "rxjs": "^6.2.0"
   }
 }

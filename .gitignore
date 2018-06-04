@@ -1,4 +1,7 @@
 # dependencies
 /node_modules
-/test-result
+
+# test report result
 /mochawesome-report
+
+/test/testLoop.js
