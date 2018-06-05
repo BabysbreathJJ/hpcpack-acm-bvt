@@ -8,7 +8,7 @@ supertest = require('supertest'),
     Loop = require('./loop.js');
 
 
-describe('Diag', function () {
+describe('Diag-Job', function () {
     let nodes = [];
     let test = {};
     let jobId = '';
@@ -17,6 +17,7 @@ describe('Diag', function () {
     let pingpong = {};
     let ring = {};
     let timeout = 0;
+    let estimatedTime = 30000;
 
     before((done) => {
         api.get('/nodes')
@@ -56,13 +57,10 @@ describe('Diag', function () {
     })
 
     it('should create a new pingpong diag test', (done) => {
-        if (nodes.length > 4) {
-            nodes = nodes.slice(0, 4);
-        }
         diagApi.post('')
             .set('Accept', 'application/json')
             .send({
-                name: 'diag-BVT-test',
+                name: 'BVT-pingpong-test',
                 targetNodes: nodes,
                 jobType: 'diagnostics',
                 diagnosticTest: pingpong
@@ -77,10 +75,65 @@ describe('Diag', function () {
     })
 
 
-    this.timeout(nodes.length * 30000);
+    this.timeout(nodes.length * estimatedTime);
     it('should get a pinpong diag test result before timeout', (done) => {
         let startTime = new Date();
-        timeout = nodes.length * 30000;
+        timeout = nodes.length * estimatedTime;
+        console.log(timeout);
+        let loop = Loop.start(
+            diagBaseUrl + '/' + jobId,
+            {
+                next: (result) => {
+                    result = JSON.parse(result);
+                    console.log(result.state);
+                    let endTime = new Date();
+                    let elapseTime = endTime - startTime;
+                    if (result.state == 'Finished') {
+                        assert.ok(result.state === 'Finished', 'pingpong diagnostic finished in ' + elapseTime + ' ms.');
+                        expect(result.aggregationResult).isNotEmpty();
+                        done();
+                        return false;
+                    }
+                    else if (result.state == 'Failed') {
+                        assert.ok(result.state === 'Failed', 'pingpong diagnostic failed in ' + elapseTime + ' ms.');
+                        expect(result.aggregationResult).isNotEmpty();
+                        done();
+                        return false;
+                    }
+
+                    if (elapseTime > timeout) {
+                        assert.fail("actual runtime " + elapseTime + ' ms', "expected time " + timeout + ' ms', "The pingpong diag test doesn't finished in expected time, time elapses: " + elapseTime + ' ms, the max time is ' + timeout + ' ms');
+                        done();
+                        return false;
+                    }
+                    return true;
+                }
+            },
+            10000
+        );
+    })
+
+    it('should create a new ring diag test', (done) => {
+        diagApi.post('')
+            .set('Accept', 'application/json')
+            .send({
+                name: 'BVT-ring-test',
+                targetNodes: nodes,
+                jobType: 'diagnostics',
+                diagnosticTest: ring
+            })
+            .expect(201)
+            .end((err, res) => {
+                expect(res.headers.location).to.include('/v1/diagnostics/');
+                let locationData = res.headers.location.split('/');
+                jobId = locationData[locationData.length - 1];
+                done();
+            });
+    })
+
+    it('should get a ring diag test result before timeout', (done) => {
+        let startTime = new Date();
+        timeout = nodes.length * estimatedTime;
         console.log(timeout);
         let loop = Loop.start(
             diagBaseUrl + '/' + jobId,
@@ -113,26 +166,7 @@ describe('Diag', function () {
         );
     })
 
-    // it('should create a new ring diag test', (done) => {
-    //     if (nodes.length > 4) {
-    //         nodes = nodes.slice(0, 4);
-    //     }
-    //     diagApi.post('')
-    //         .set('Accept', 'application/json')
-    //         .send({
-    //             name: 'diag-BVT-test',
-    //             targetNodes: nodes,
-    //             jobType: 'diagnostics',
-    //             diagnosticTest: ring
-    //         })
-    //         .expect(201)
-    //         .end((err, res) => {
-    //             expect(res.headers.location).to.include('/v1/diagnostics/');
-    //             let locationData = res.headers.location.split('/');
-    //             jobId = locationData[locationData.length - 1];
-    //             done();
-    //         });
-    // })
+
 
 });
 
