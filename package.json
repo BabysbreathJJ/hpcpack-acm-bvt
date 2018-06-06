@@ -1,6 +1,11 @@
 {
   "name": "hpc-rest-api-testing",
   "version": "1.0.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/BabysbreathJJ/hpc-rest-bvt.git"
+  },
   "description": "HPC-ACM REST API Testing",
   "author": "Jingjing Li",
   "dependencies": {
