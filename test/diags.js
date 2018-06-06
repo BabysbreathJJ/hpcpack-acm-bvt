@@ -1,4 +1,4 @@
-var URL = process.env.URL ? process.env.URL : 'http://evanclinuxdev1.eastasia.cloudapp.azure.com:8080/v1';
+var URL = process.env.URL ? process.env.URL : 'http://evanclinuxdev1.eastasia.cloudapp.azure.com:8080/v1/test';
 
 var should = require('chai').should(),
     expect = require('chai').expect,
@@ -8,6 +8,9 @@ supertest = require('supertest'),
     api = supertest(`${URL}`),
     diagApi = supertest(diagBaseUrl),
     Loop = require('./loop.js');
+
+console.log(URI);
+console.log(diagBaseUrl);
 
 
 describe('Diag-Job', function () {
@@ -25,6 +28,7 @@ describe('Diag-Job', function () {
         api.get('/nodes')
             .set('Accept', 'application/json')
             .end((err, res) => {
+                expect(res.body).to.be.an.instanceod(Array);
                 res.body.forEach(e => {
                     if (e.health == 'OK') {
                         nodes.push(e.id);
