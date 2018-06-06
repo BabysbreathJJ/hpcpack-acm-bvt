@@ -8,7 +8,7 @@ supertest = require('supertest'),
     api = supertest(`${URL}`),
     diagApi = supertest(diagBaseUrl),
     Loop = require('./loop.js');
-    
+
 console.log(diagBaseUrl);
 
 
@@ -27,7 +27,8 @@ describe('Diag-Job', function () {
         api.get('/nodes')
             .set('Accept', 'application/json')
             .end((err, res) => {
-                expect(res.body).to.be.an.instanceod(Array);
+                assert.isNotEmpty(res);
+                expect(res.body).to.be.an.instanceof(Array);
                 res.body.forEach(e => {
                     if (e.health == 'OK') {
                         nodes.push(e.id);
