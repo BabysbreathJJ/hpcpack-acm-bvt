@@ -8,8 +8,7 @@ supertest = require('supertest'),
     api = supertest(`${URL}`),
     diagApi = supertest(diagBaseUrl),
     Loop = require('./loop.js');
-
-console.log(URI);
+    
 console.log(diagBaseUrl);
 
 
