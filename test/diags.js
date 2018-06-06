@@ -1,10 +1,12 @@
+var URL = process.env.URL ? process.env.URL : 'http://evanclinuxdev1.eastasia.cloudapp.azure.com:8080/v1';
+
 var should = require('chai').should(),
     expect = require('chai').expect,
     assert = require('chai').assert;
 supertest = require('supertest'),
-    diagBaseUrl = 'http://evanclinuxdev1.eastasia.cloudapp.azure.com:8080/v1/diagnostics',
-    api = supertest('http://evanclinuxdev1.eastasia.cloudapp.azure.com:8080/v1'),
-    diagApi = supertest('http://evanclinuxdev1.eastasia.cloudapp.azure.com:8080/v1/diagnostics'),
+    diagBaseUrl = `${URL}/diagnostics`,
+    api = supertest(`${URL}`),
+    diagApi = supertest(diagBaseUrl),
     Loop = require('./loop.js');
 
 
@@ -90,13 +92,13 @@ describe('Diag-Job', function () {
                     let elapseTime = endTime - startTime;
                     if (result.state == 'Finished') {
                         assert.ok(result.state === 'Finished', 'pingpong diagnostic finished in ' + elapseTime + ' ms.');
-                        expect(result.aggregationResult).isNotEmpty();
+                        expect(result).to.have.property('aggregationResult');
                         done();
                         return false;
                     }
                     else if (result.state == 'Failed') {
                         assert.ok(result.state === 'Failed', 'pingpong diagnostic failed in ' + elapseTime + ' ms.');
-                        expect(result.aggregationResult).isNotEmpty();
+                        expect(result).to.have.property('aggregationResult');
                         done();
                         return false;
                     }
