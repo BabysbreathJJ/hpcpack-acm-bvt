@@ -1,6 +1,6 @@
-var URL = process.env.URL ? process.env.URL : 'http://evanclinuxdev1.eastasia.cloudapp.azure.com:8080/v1';
+var URL = process.env.URL ? process.env.URL : '';
 // var URL = 'http://evanclinuxdev1.eastasia.cloudapp.azure.com:8080/v1';
-var URL = 'http://frontend.westus.azurecontainer.io/v1';
+// var URL = 'http://frontend.westus.azurecontainer.io/v1';
 const addContext = require('mochawesome/addContext');
 const chalk = require('chalk');
 const error = chalk.bold.red;
@@ -20,7 +20,7 @@ supertest = require('supertest'),
 console.log(info("The base url of rest api is: ") + `${URL}`);
 
 function formateDateValue(num) {
-    return num > 10 ? num : '0' + num;
+    return num > 9 ? num : '0' + num;
 }
 
 function getTime() {
@@ -51,11 +51,13 @@ describe('Diag-Job', function () {
     before(function (done) {
         console.log(title("\nBefore all hook: "));
         addContext(this, `Config ${perCallCost} ms as the timeout value of every api call.`);
-        addContext(this, `Config ${perCallCost} ms as the timeout value of every api call.`);
         addContext(this, {
             title: 'nodes api: ',
             value: `${URL}/nodes`
         });
+        if (URL == '') {
+            assert.fail('Should have base url', '', 'The test stopped by could not get base url, please confirm if you have passed one to run bvt.');
+        }
 
         let self = this;
         api.get('/nodes')
