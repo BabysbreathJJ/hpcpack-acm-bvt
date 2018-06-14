@@ -1,5 +1,5 @@
 var URL = process.env.URL ? process.env.URL : '';
-var URL = 'http://evanclinuxdev1.eastasia.cloudapp.azure.com:8080/v1';
+// var URL = 'http://evanclinuxdev1.eastasia.cloudapp.azure.com:8080/v1';
 // var URL = 'http://frontend.westus.azurecontainer.io/v1';
 const addContext = require('mochawesome/addContext');
 const chalk = require('chalk');
