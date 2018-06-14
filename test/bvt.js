@@ -10,9 +10,10 @@ function importTest(name, path) {
 
 
 describe("hpc-acm-bvt", function () {
+    importTest('Node', './node/node');
     importTest('Diag-job', './diagnostic/job');
     importTest('Diag-task', './diagnostic/task');
     after(function () {
-        console.log("after all tests");
+        console.log(common.info("\nAll tests ends"));
     });
 })

@@ -27,8 +27,10 @@ before(function (done) {
         title: 'diag lsit api: ',
         value: `${diagBaseUrl}`
     });
+
     if (URL == '') {
         assert.fail('Should have base url', '', 'The test stopped by could not get base url, please confirm if you have passed one to run bvt.');
+        return done(err);
     }
 
     let self = this;
