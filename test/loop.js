@@ -8,7 +8,7 @@ module.exports = class Loop {
                 return;
             }
             let ts = new Date().getTime();
-            request(url, function (error, reponse, body) {
+            request(url, function (error, reponse) {
                 if (error !== null) {
                     looper.ended = true;
                     if (observer.error) {
@@ -19,7 +19,7 @@ module.exports = class Loop {
                     return;
                 }
                 let elapse = new Date().getTime() - ts;
-                let n = observer.next(body);
+                let n = observer.next(reponse, error);
                 if (!n) {
                     looper.ended = true;
                     return;
