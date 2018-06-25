@@ -56,6 +56,11 @@ before(function (done) {
                 let job = res.body.find(function (ele) {
                     return ele.state == 'Finished'
                 });
+                if (job == undefined || job == null) {
+                    console.log(error("Couldn't find a Finished job in recent 100 jobs"));
+                    assert.fail('Should find a Finished job in recent 100 jobs', '', "Couldn't find a Finished job in recent 100 jobs");
+                    return done(err);
+                }
                 jobId = job.id;
                 console.log(info("The selected job id is: ") + jobId);
                 addContext(self, {
