@@ -25,7 +25,7 @@ before(function (done) {
     console.log(title("\nBefore all hook of diag task: "));
     addContext(this, `Config ${perCallCost} ms as the timeout value of every api call.`);
     addContext(this, {
-        title: 'diag lsit api: ',
+        title: 'diag list base url: ',
         value: `${diagBaseUrl}`
     });
 
