@@ -3,6 +3,7 @@ var URL = common.URL;
 const addContext = common.addContext;
 const info = common.info;
 const title = common.title;
+const error = common.error;
 var handleError = common.handleError;
 var expect = common.expect,
     assert = common.assert;
