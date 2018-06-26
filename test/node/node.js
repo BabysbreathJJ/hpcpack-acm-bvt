@@ -1,14 +1,13 @@
 var common = require("../common");
 var URL = common.URL;
-console.log(URL);
 const addContext = common.addContext;
 const info = common.info;
 const title = common.title;
 var expect = common.expect,
     assert = common.assert,
     supertest = common.supertest,
-    handleError = common.handleError;
-nodeBaseUrl = `${URL}/nodes`,
+    handleError = common.handleError,
+    nodeBaseUrl = `${URL}/nodes`,
     nodeApi = supertest(nodeBaseUrl);
 
 let nodeId = -1;
@@ -59,7 +58,7 @@ it('should return corresponding detail info with specified node id', function (d
             try {
                 if (err) {
                     handleError(err, self);
-                    return done(error);
+                    return done(err);
                 }
                 console.log(info(`The detail info of node ${nodeId}:`));
                 console.log(JSON.stringify(res.body, null, "  "));

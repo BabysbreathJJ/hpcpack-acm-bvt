@@ -5,8 +5,8 @@ const info = common.info;
 const title = common.title;
 const interval = 5000;
 var expect = common.expect,
-    assert = common.assert;
-supertest = common.supertest,
+    assert = common.assert,
+    supertest = common.supertest,
     diagBaseUrl = `${URL}/diagnostics`,
     api = supertest(`${URL}`),
     diagApi = supertest(diagBaseUrl),
@@ -217,8 +217,8 @@ it('should get a pinpong diag test result before timeout', function (done) {
     this.timeout(timeout);
     console.log(info(`Timeout for pingpong job is: ${timeout} ms.`));
     console.log(info(`Job progress  (get state every ${interval} ms): `));
-    addContext(this, "Job timeout set to ${timeout} ms");
-    addContext(this, "Job progress (get state every 1000 ms)");
+    addContext(this, `Job timeout set to ${timeout} ms`);
+    addContext(this, `Job progress (get state every 1000 ms)`);
     let loop = Loop.start(
         diagBaseUrl + '/' + pingpongJobId,
         {
@@ -250,7 +250,6 @@ it('should get a pinpong diag test result before timeout', function (done) {
                         value: result
                     });
                     assert.ok(result.state === 'Finished', 'pingpong diagnostic finished in ' + elapseTime + ' ms.');
-                    expect(result).to.have.property('aggregationResult');
                     done();
                     return false;
                 }
@@ -267,7 +266,6 @@ it('should get a pinpong diag test result before timeout', function (done) {
                         value: result
                     });
                     assert.ok(result.state === 'Failed', 'pingpong diagnostic failed in ' + elapseTime + ' ms.');
-                    expect(result).to.have.property('aggregationResult');
                     done();
                     return false;
                 }
@@ -293,6 +291,32 @@ it('should get a pinpong diag test result before timeout', function (done) {
         },
         interval
     );
+})
+
+it('should get aggregation result with a specified job id', function (done) {
+    console.log(title('\nshould get aggregation result with a specified job id:'));
+    let self = this;
+    diagApi.get(`/${pingpongJobId}/aggregationresult`)
+        .set('Accept', 'application/json')
+        .expect(200)
+        .end((err, res) => {
+            try {
+                if (err) {
+                    handleError(err, self);
+                    return done(err);
+                }
+                console.log(info(`Diag job ${pingpongJobId}'s aggregation result is:`));
+                console.log(JSON.stringify(JSON.stringify(res.body), null, "  "));
+                addContext(self, {
+                    title: `Aggregation result`,
+                    value: res.body
+                });
+                assert.isNotEmpty(res.body);
+            } catch (error) {
+                handleError(error.self);
+                done(error);
+            }
+        })
 })
 
 it('should create a new ring diag test', function (done) {
