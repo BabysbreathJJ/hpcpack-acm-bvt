@@ -19,7 +19,6 @@ var handleError = common.handleError;
 let nodes = [];
 let ringJobId = -1;
 let pingpongJobId = -1;
-let taskId = -1;
 let pingpong = {};
 let ring = {};
 let timeout = 0;
@@ -121,8 +120,8 @@ it('should return diag tests list', function (done) {
         });
 })
 
-it('should return 400 Bad Request when create a new with empty diagnosticTest', function (done) {
-    console.log(title("\nshould return 400 Bad Request when create a new with empty diagnosticTest:"));
+it('should return 400 Bad Request when create a new diag with empty diagnosticTest property', function (done) {
+    console.log(title("\nshould return 400 Bad Request when create a new diag with empty diagnosticTest:"));
     let self = this;
     diagApi.post('')
         .set('Accept', 'application/json')
@@ -139,7 +138,8 @@ it('should return 400 Bad Request when create a new with empty diagnosticTest', 
                     handleError(err, self);
                     return done(err);
                 }
-                console.log(info("400 return value: ") + res);
+                console.log(info("400 return value: "));
+                console.log(JSON.stringify(res, null, "  "));
                 addContext(self, {
                     title: '400 retrun value',
                     value: res
@@ -169,7 +169,8 @@ it('should return 400 Bad Request when create a new with empty targetNodes', fun
                 handleError(err, self);
                 return done(err);
             }
-            console.log(info("400 return value: ") + res);
+            console.log(info("400 return value: "));
+            console.log(JSON.stringify(res, null, "  "));
             addContext(self, {
                 title: '400 retrun value',
                 value: res
@@ -201,12 +202,44 @@ it('should create a new pingpong diag test', function (done) {
                     title: 'New pingpong job location',
                     value: res.headers.location
                 });
-                expect(res.headers.location).to.include('/v1/diagnostics/');
+                expect(res.headers.location).to.include('/diagnostics/');
                 let locationData = res.headers.location.split('/');
                 pingpongJobId = locationData[locationData.length - 1];
                 done();
             } catch (err) {
+                handleError(err, self);
                 done(err);
+            }
+        });
+})
+
+it('should return detailed info with a specified diag job id', function (done) {
+    console.log(title('\nshould return detailed info with a specified diag job id'));
+    let self = this;
+    diagApi.get(`/${pingpongJobId}`)
+        .set('Accept', 'application/json')
+        .expect(200)
+        .end(function (err, res) {
+            try {
+                if (err) {
+                    handleError(err, self);
+                    return done(err);
+                }
+                console.log(info(`Diag ${pingpongJobId} detailed info:`));
+                console.log(JSON.stringify(res.body, null, "  "));
+                addContext(self, {
+                    title: `Diage ${pingpongJobId} detailed info`,
+                    value: res.body
+                });
+                assert.isNotEmpty(res.body);
+                let result = res.body;
+                expect(result).to.have.property('createdAt');
+                expect(result['id']).to.eql(Number(pingpongJobId));
+                expect(result).to.have.property('targetNodes');
+                done();
+            } catch (error) {
+                handleError(error, self);
+                done(error);
             }
         });
 })
@@ -364,21 +397,21 @@ it('should cancel a diag test', function (done) {
         })
         .expect(200)
         .end(function (err, res) {
-            if (err) {
-                handleError(err, self);
-                return done(err);
+            try {
+                if (err) {
+                    handleError(err, self);
+                    return done(err);
+                }
+                console.log(info("The cancel result: "));
+                console.log(JSON.stringify(res.text, null, "  "));
+                addContext(self, {
+                    title: 'The cancel result',
+                    value: res.text
+                });
+                done();
+            } catch (error) {
+                handleError(error, self);
+                done(error);
             }
-            console.log(info("The cancel result: "));
-            console.log(JSON.stringify(res.text, null, "  "));
-            addContext(self, {
-                title: 'The cancel result',
-                value: res.text
-            });
-            done();
         })
 })
-
-module.exports = {
-    taskId: taskId,
-    pingpongJobId: pingpongJobId
-}

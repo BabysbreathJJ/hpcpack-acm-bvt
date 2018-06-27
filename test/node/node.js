@@ -10,6 +10,8 @@ var expect = common.expect,
     nodeBaseUrl = `${URL}/nodes`,
     nodeApi = supertest(nodeBaseUrl);
 
+var getTime = common.getTime;
+
 let nodeId = -1;
 
 before(function (done) {
@@ -107,6 +109,67 @@ it('should return node event with specified node id', function (done) {
         })
 })
 
+it('should return metadata of a node', function (done) {
+    console.log(title(`\nshould return metadata of a node:`));
+    let self = this;
+    nodeApi.get(`/${nodeId}/metadata`)
+        .set('Accept', 'application/json')
+        .expect(200)
+        .end(function (err, res) {
+            try {
+                if (err) {
+                    handleError(err, self);
+                    return done(err);
+                }
+                console.log(info(`The meatadata of node ${nodeId}:`));
+                console.log(JSON.stringify(res.body, null, "  "));
+                addContext(self, {
+                    title: `The metadata of node ${nodeId}`,
+                    value: res.body
+                });
+                expect(res.body).to.have.property('compute');
+                expect(res.body).to.have.property('network');
+                let result = res.body;
+                let compute = result['compute'];
+                let network = result['network'];
+                assert.isNotEmpty(compute);
+                assert.isNotEmpty(network);
+                done();
+            } catch (err) {
+                handleError(err, self);
+                done(err);
+            }
+        })
+})
+
+it('should return Azure scheduled events of a node', function (done) {
+    console.log(title(`\nshould return Azure sheduled events of a node:`));
+    let self = this;
+    nodeApi.get(`/${nodeId}/scheduledevents`)
+        .set('Accept', 'application/json')
+        .expect(200)
+        .end(function (err, res) {
+            try {
+                if (err) {
+                    handleError(err, self);
+                    return done(err);
+                }
+                console.log(info(`The Azure scheduled events of node ${nodeId}:`));
+                console.log(JSON.stringify(res.body, null, "  "));
+                addContext(self, {
+                    title: `Azure scheduled events of node ${nodeId}`,
+                    value: res.body
+                });
+                expect(res.body).to.have.property('Events');
+                expect(res.body['Events']).to.be.an.instanceof(Array);
+                done();
+            } catch (err) {
+                handleError(err, self);
+                done(err);
+            }
+        })
+})
+
 it('should return job info with specified node id', function (done) {
     console.log(title('\nshould return job info with specified node id:'));
     let self = this;
@@ -121,11 +184,43 @@ it('should return job info with specified node id', function (done) {
                 }
                 console.log(info(`The job info of node ${nodeId} is:`));
                 console.log(JSON.stringify(res.body, null, "  "));
-                expect(res.body).to.be.an.instanceOf(Array);
                 addContext(self, {
                     title: `The job info of node ${nodeId}`,
                     value: res.body
-                })
+                });
+                expect(res.body).to.be.an.instanceOf(Array);
+                done();
+            } catch (err) {
+                handleError(err, self);
+                done(err);
+            }
+        })
+})
+
+it('should return node metric history', function (done) {
+    console.log(title(`\nshould return node metric history`));
+    let self = this;
+    nodeApi.get(`/${nodeId}/metricHistory`)
+        .set('Accept', 'application/json')
+        .expect(200)
+        .end(function (err, res) {
+            try {
+                if (err) {
+                    handleError(err, self);
+                    return done(err);
+                }
+                let now = getTime();
+                console.log(info(`Metric history of node ${nodeId} at ${now}:`));
+                console.log(JSON.stringify(res.body, null, "  "));
+                addContext(self, {
+                    title: `Metric history of node ${nodeId} at ${now}`,
+                    value: res.body
+                });
+                assert.isNotEmpty(res.body);
+                let result = res.body;
+                expect(result).to.have.property('range');
+                expect(result).to.have.property('data');
+                assert.isNotEmpty(result['data']);
                 done();
             } catch (err) {
                 handleError(err, self);

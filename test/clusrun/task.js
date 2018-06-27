@@ -8,19 +8,23 @@ var handleError = common.handleError;
 var expect = common.expect,
     assert = common.assert,
     supertest = common.supertest,
-    diagBaseUrl = `${URL}/diagnostics`,
-    diagApi = supertest(diagBaseUrl),
+    clusrunBaseUrl = `${URL}/clusrun`,
+    outputBaseUrl = `${URL}/output/clusrun`,
+    clusrunApi = supertest(clusrunBaseUrl),
+    outputApi = supertest(outputBaseUrl),
     perCallCost = common.perCallCost;
 
 
 let jobId = -1;
 let taskId = -1;
 let jobNum = 100;
+let resultKey = "";
 let maxNum = Number.MAX_VALUE;
-
+let outputInitOffset = -8192;
+let outputPageSize = 8192;
 
 before(function (done) {
-    console.log(title("\nBefore all hook of diag task: "));
+    console.log(title("\nBefore all hook of clusrun task: "));
     addContext(this, `Config ${perCallCost} ms as the timeout value of every api call.`);
     addContext(this, {
         title: 'diag list base url: ',
@@ -33,7 +37,7 @@ before(function (done) {
     }
 
     let self = this;
-    diagApi.get(`?lastid=${maxNum}&count=${jobNum}&reverse=true`)
+    clusrunApi.get(`?lastid=${maxNum}&count=${jobNum}&reverse=true`)
         .set('Accept', 'application/json')
         .expect(200)
         .end(function (err, res) {
@@ -42,11 +46,11 @@ before(function (done) {
                     handleError(err, self);
                     return done(err);
                 }
-                console.log(info('The last 100 diag job is: '));
+                console.log(info('The last 100 clusrun job is: '));
                 console.log(JSON.stringify(res.body, null, "  "));
                 console.log(info("The result body length returned from diag list api: ") + res.body.length);
                 addContext(self, {
-                    title: 'Diag list size',
+                    title: 'clusrun list size',
                     value: res.body.length
                 });
                 assert.isNotEmpty(res.body);
@@ -79,7 +83,7 @@ it('should return task list with a specified job id', function (done) {
     console.log(info("Job id is: ") + jobId);
     addContext(this, `Job id is ${jobId}`);
     let self = this;
-    diagApi.get(`/${jobId}/tasks`)
+    clusrunApi.get(`/${jobId}/tasks`)
         .set('Accept', 'application/json')
         .expect(200)
         .end(function (err, res) {
@@ -98,7 +102,7 @@ it('should return task list with a specified job id', function (done) {
                 expect(result.length).to.be.above(0);
                 let firstTask = result[0];
                 expect(firstTask).to.have.property('jobId', Number(jobId));
-                expect(firstTask).to.have.property('jobType', 'Diagnostics');
+                expect(firstTask).to.have.property('jobType', 'ClusRun');
                 taskId = firstTask['id'];
                 console.log(info(`The first task id of job ${jobId}: `) + taskId);
                 addContext(self, {
@@ -121,7 +125,7 @@ it('should get detailed task info with a specified task id', function (done) {
     addContext(this, `Task id is ${taskId}`);
     expect(taskId).to.be.a('number');
     let self = this;
-    diagApi.get(`/${jobId}/tasks/${taskId}`)
+    clusrunApi.get(`/${jobId}/tasks/${taskId}`)
         .set('Accpet', 'application/json')
         .expect(200)
         .end(function (err, res) {
@@ -156,7 +160,7 @@ it('should get a task result with a specified task id', function (done) {
     addContext(this, `Task id is ${taskId}`);
     expect(taskId).to.be.a('number');
     let self = this;
-    diagApi.get(`/${jobId}/tasks/${taskId}/result`)
+    clusrunApi.get(`/${jobId}/tasks/${taskId}/result`)
         .set('Accept', 'application/json')
         .expect(200)
         .end(function (err, res) {
@@ -176,6 +180,77 @@ it('should get a task result with a specified task id', function (done) {
                 expect(taskRes).to.have.property('jobId', jobId);
                 expect(taskRes).to.have.property('taskId', taskId);
                 expect(taskRes).to.have.property('resultKey');
+                resultKey = taskRes['resultKey'];
+                done();
+            } catch (error) {
+                handleError(error, self);
+                done(error);
+            }
+        });
+})
+
+it('should get the whole output of a task', function (done) {
+    console.log(title('\nshould get the whole output of a task'));
+    console.log(info("Job id is: ") + jobId);
+    console.log(info("Task id is: ") + taskId);
+    addContext(this, `Job id is ${jobId}`);
+    addContext(this, `Task id is ${taskId}`);
+    expect(taskId).to.be.a('number');
+    let self = this;
+    outputApi.get(`/${resultKey}/raw`)
+        .set('Accept', 'application/json')
+        .expect(200)
+        .end(function (err, res) {
+            try {
+                if (err) {
+                    handleError(err, self);
+                    return done(err);
+                }
+                assert.isNotEmpty(res.body);
+                console.log(info(`task ${taskId} whole output:`));
+                console.log(JSON.stringify(res.body), null, "  ");
+                addContext(self, {
+                    title: "Result body",
+                    value: res.body
+                });
+                done();
+            } catch (error) {
+                handleError(error, self);
+                done(error);
+            }
+        });
+
+})
+
+
+
+it('should get partial output of a task', function (done) {
+    console.log(title(`\nshould get partial output of a task`));
+    console.log(info("Job id is: ") + jobId);
+    console.log(info("Task id is: ") + taskId);
+    addContext(this, `Job id is ${jobId}`);
+    addContext(this, `Task id is ${taskId}`);
+
+    let self = this;
+    outputApi.get(`/${resultKey}/page?offset=${outputInitOffset}&pageSize=${outputPageSize}`)
+        .set('Accept', 'application/json')
+        .expect(200)
+        .end(function (err, res) {
+            try {
+                if (err) {
+                    handleError(err, self);
+                    return done(er);
+                }
+                assert.isNotEmpty(res.body);
+                console.log(info(`task ${taskId} partial output:`));
+                console.log(JSON.stringify(res.body), null, "  ");
+                addContext(self, {
+                    title: 'Output result',
+                    value: res.body
+                });
+                let result = res.body;
+                expect(result).to.have.property('offset');
+                expect(result).to.have.property('size');
                 done();
             } catch (error) {
                 handleError(error, self);
