@@ -28,7 +28,7 @@ function getTime() {
     let date = new Date();
     let year = date.getFullYear();
     let month = formateDateValue(date.getMonth() + 1);
-    let day = formateDateValue(date.getDay());
+    let day = formateDateValue(date.getDate());
     let hour = formateDateValue(date.getHours());
     let minute = formateDateValue(date.getMinutes());
     let second = formateDateValue(date.getSeconds());

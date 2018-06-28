@@ -206,13 +206,13 @@ it('should get the whole output of a task', function (done) {
                     handleError(err, self);
                     return done(err);
                 }
-                assert.isNotEmpty(res.body);
                 console.log(info(`task ${taskId} whole output:`));
                 console.log(JSON.stringify(res.body), null, "  ");
                 addContext(self, {
                     title: "Result body",
                     value: res.body
                 });
+                assert.isNotEmpty(res.body);
                 done();
             } catch (error) {
                 handleError(error, self);

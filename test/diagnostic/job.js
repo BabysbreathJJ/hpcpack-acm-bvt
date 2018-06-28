@@ -19,6 +19,7 @@ var handleError = common.handleError;
 let nodes = [];
 let ringJobId = -1;
 let pingpongJobId = -1;
+let pingpongJobState = "";
 let pingpong = {};
 let ring = {};
 let timeout = 0;
@@ -252,104 +253,140 @@ it('should get a pinpong diag test result before timeout', function (done) {
     console.log(info(`Job progress  (get state every ${interval} ms): `));
     addContext(this, `Job timeout set to ${timeout} ms`);
     addContext(this, `Job progress (get state every 1000 ms)`);
-    let loop = Loop.start(
-        diagBaseUrl + '/' + pingpongJobId,
-        {
-            next: (res, err) => {
-                if (err) {
-                    handleError(err, self);
-                    done(err);
-                    return false;
-                }
-                result = res.body;
-                result = JSON.parse(result);
-                console.log(info("Job state: ") + result.state);
-                addContext(this, {
-                    title: 'Job state: ',
-                    value: result.state
-                });
-                let endTime = new Date();
-                let elapseTime = endTime - startTime;
-                if (result.state == 'Finished') {
-                    console.log(info(`Job ends with Finished in ${elapseTime} ms`));
-                    console.log(info(`The result returned when job finished is:`));
-                    console.log(JSON.stringify(result, null, "  "));
+    try {
+        let loop = Loop.start(
+            diagBaseUrl + '/' + pingpongJobId,
+            {
+                next: (res, err) => {
+                    if (err) {
+                        handleError(err, self);
+                        done(err);
+                        return false;
+                    }
+                    result = res.body;
+                    result = JSON.parse(result);
+                    pingpongJobState = result.state;
+                    console.log(info("Job state: ") + result.state);
                     addContext(this, {
-                        title: 'Cost time:',
-                        value: `Job ends with Finished in ${elapseTime} ms`
+                        title: 'Job state',
+                        value: result.state
                     });
-                    addContext(this, {
-                        title: 'Final result:',
-                        value: result
-                    });
-                    assert.ok(result.state === 'Finished', 'pingpong diagnostic finished in ' + elapseTime + ' ms.');
-                    done();
-                    return false;
-                }
-                else if (result.state == 'Failed') {
-                    console.log(info(`Job ends with Failed in ${elapseTime} ms`));
-                    console.log(info(`The result returned when job failed is:`));
-                    console.log(JSON.stringify(result, null, "  "));
-                    addContext(this, {
-                        title: 'Cost time:',
-                        value: `Job ends with Failed in ${elapseTime} ms`
-                    });
-                    addContext(this, {
-                        title: 'Final result:',
-                        value: result
-                    });
-                    assert.ok(result.state === 'Failed', 'pingpong diagnostic failed in ' + elapseTime + ' ms.');
-                    done();
-                    return false;
-                }
+                    let endTime = new Date();
+                    let elapseTime = endTime - startTime;
+                    if (result.state == 'Finished') {
+                        console.log(info(`Job ends with Finished in ${elapseTime} ms`));
+                        console.log(info(`The result returned when job finished is:`));
+                        console.log(JSON.stringify(result, null, "  "));
+                        addContext(this, {
+                            title: 'Cost time',
+                            value: `Job ends with Finished in ${elapseTime} ms`
+                        });
+                        addContext(this, {
+                            title: 'Final result',
+                            value: result
+                        });
+                        assert.ok(result.state === 'Finished', 'pingpong diagnostic finished in ' + elapseTime + ' ms.');
+                        Loop.stop(loop);
+                        return done();
+                    }
+                    else if (result.state == 'Failed') {
+                        console.log(info(`Job ends with Failed in ${elapseTime} ms`));
+                        console.log(info(`The result returned when job failed is:`));
+                        console.log(JSON.stringify(result, null, "  "));
+                        addContext(this, {
+                            title: 'Cost time',
+                            value: `Job ends with Failed in ${elapseTime} ms`
+                        });
+                        addContext(this, {
+                            title: 'Final result',
+                            value: result
+                        });
+                        assert.ok(result.state === 'Failed', 'pingpong diagnostic failed in ' + elapseTime + ' ms.');
+                        Loop.stop(loop);
+                        return done();
+                    }
 
-                if (elapseTime > timeout) {
-                    console.log(info(`Job ends with timeout in ${elapseTime} ms`));
-                    console.log(info(`The result returned when job timeout is:`));
-                    console.log(JSON.stringify(result, null, "  "));
-                    addContext(this, {
-                        title: 'Cost time:',
-                        value: `Test ends with timeout in ${elapseTime} ms`
-                    });
-                    addContext(this, {
-                        title: 'Job result when timeout:',
-                        value: result
-                    });
-                    assert.fail("actual runtime " + elapseTime + ' ms', "expected time " + timeout + ' ms', "The pingpong diag test doesn't finished in expected time, time elapses: " + elapseTime + ' ms, the max time is ' + timeout + ' ms');
-                    done();
-                    return false;
+                    if (elapseTime > timeout) {
+                        console.log(info(`Job ends with timeout in ${elapseTime} ms`));
+                        console.log(info(`The result returned when job timeout is:`));
+                        console.log(JSON.stringify(result, null, "  "));
+                        addContext(this, {
+                            title: 'Cost time',
+                            value: `Test ends with timeout in ${elapseTime} ms`
+                        });
+                        addContext(this, {
+                            title: 'Job result when timeout',
+                            value: result
+                        });
+                        assert.fail("actual runtime " + elapseTime + ' ms', "expected time " + timeout + ' ms', "The pingpong diag test doesn't finished in expected time, time elapses: " + elapseTime + ' ms, the max time is ' + timeout + ' ms');
+                        Loop.stop(loop);
+                        return done();
+                    }
+                    return true;
                 }
-                return true;
-            }
-        },
-        interval
-    );
+            },
+            interval
+        );
+    } catch (error) {
+        handleError(error, this);
+        done(error);
+    }
+
 })
 
 it('should get aggregation result with a specified job id', function (done) {
-    console.log(title('\nshould get aggregation result with a specified job id:'));
     let self = this;
-    diagApi.get(`/${pingpongJobId}/aggregationresult`)
-        .set('Accept', 'application/json')
-        .expect(200)
-        .end((err, res) => {
-            try {
-                if (err) {
-                    handleError(err, self);
-                    return done(err);
+    console.log(title('\nshould get aggregation result with a specified job id:'));
+    addContext(self, `To get aggregationResult of job ${pingpongJobId}`);
+    if (pingpongJobState == "Finished") {
+        diagApi.get(`/${pingpongJobId}/aggregationresult`)
+            .set('Accept', 'application/json')
+            .expect(200)
+            .end((err, res) => {
+                try {
+                    if (err) {
+                        handleError(err, self);
+                        return done(err);
+                    }
+                    console.log(info(`Diag job ${pingpongJobId}'s aggregation result is:`));
+                    console.log(JSON.stringify(JSON.stringify(res.body), null, "  "));
+                    addContext(self, {
+                        title: `Aggregation result`,
+                        value: res.body
+                    });
+                    assert.isNotEmpty(res.body);
+                    done();
+                } catch (error) {
+                    handleError(error, self);
+                    done(error);
                 }
-                console.log(info(`Diag job ${pingpongJobId}'s aggregation result is:`));
-                console.log(JSON.stringify(JSON.stringify(res.body), null, "  "));
-                addContext(self, {
-                    title: `Aggregation result`,
-                    value: res.body
-                });
-                assert.isNotEmpty(res.body);
-            } catch (error) {
-                handleError(error.self);
-                done(error);
-            }
-        })
+            })
+    }
+    else {
+        diagApi.get(`/${pingpongJobId}/aggregationresult`)
+            .set('Accept', 'application/json')
+            .expect(404)
+            .end((err, res) => {
+                try {
+                    if (err) {
+                        handleError(err, self);
+                        return done(err);
+                    }
+                    console.log(info(`Diag job ${pingpongJobId}'s aggregation result is:`));
+                    console.log(JSON.stringify(JSON.stringify(res.body), null, "  "));
+                    addContext(self, {
+                        title: `Aggregation result`,
+                        value: res.body
+                    });
+                    assert.isNotEmpty(res.body);
+                    done();
+                } catch (error) {
+                    handleError(error, self);
+                    done(error);
+                }
+            })
+    }
+
 })
 
 it('should create a new ring diag test', function (done) {
