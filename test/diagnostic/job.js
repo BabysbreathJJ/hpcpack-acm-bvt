@@ -38,32 +38,31 @@ before(function (done) {
     }
 
     let self = this;
+    console.time(info("duration"));
     api.get('/nodes')
         .set('Accept', 'application/json')
         .expect(200)
-        .end(function (err, res) {
-            try {
-                if (err) {
-                    handleError(err, self);
-                    return done(err);
+        .expect(function (res) {
+            console.log(info("The result body length returned from node api: ") + res.body.length);
+            addContext(self, {
+                title: 'Result body',
+                value: res.body
+            });
+            assert.isNotEmpty(res.body);
+            expect(res.body).to.be.an.instanceof(Array);
+            res.body.forEach(e => {
+                if (e.health == 'OK') {
+                    nodes.push(e.id);
                 }
-                console.log(info("The result body length returned from node api: ") + res.body.length);
-                addContext(self, {
-                    title: 'Result body',
-                    value: res.body
-                });
-                assert.isNotEmpty(res.body);
-                expect(res.body).to.be.an.instanceof(Array);
-                res.body.forEach(e => {
-                    if (e.health == 'OK') {
-                        nodes.push(e.id);
-                    }
-                });
-                done();
-            } catch (err) {
+            });
+        })
+        .end(function (err, res) {
+            console.timeEnd(info("duration"));
+            if (err) {
                 handleError(err, self);
-                done(err);
+                return done(err);
             }
+            done();
         })
 })
 
@@ -81,14 +80,11 @@ it('should have nodes data', function (done) {
 it('should return diag tests list', function (done) {
     console.log(title("\nshould return diag tests list:"));
     let self = this;
+    console.time(info("duration"));
     diagApi.get('/tests')
         .set('Accept', 'application/json')
         .expect(200)
-        .end(function (err, res) {
-            if (err) {
-                handleError(err, self);
-                return done(err);
-            }
+        .expect(function (res) {
             assert.isArray(res.body);
             addContext(self, {
                 title: 'Result body',
@@ -117,6 +113,13 @@ it('should return diag tests list', function (done) {
                 console.log(info("ring: "));
                 console.log(JSON.stringify(ring, null, "  "));
             }
+        })
+        .end(function (err, res) {
+            console.timeEnd(info("duration"));
+            if (err) {
+                handleError(err, self);
+                return done(err);
+            }
             done();
         });
 })
@@ -124,6 +127,7 @@ it('should return diag tests list', function (done) {
 it('should return 400 Bad Request when create a new diag with empty diagnosticTest property', function (done) {
     console.log(title("\nshould return 400 Bad Request when create a new diag with empty diagnosticTest:"));
     let self = this;
+    console.time(info("duration"));
     diagApi.post('')
         .set('Accept', 'application/json')
         .send({
@@ -133,29 +137,28 @@ it('should return 400 Bad Request when create a new diag with empty diagnosticTe
             diagnosticTest: {}
         })
         .expect(400)
+        .expect(function (res) {
+            console.log(info("400 return value: "));
+            console.log(JSON.stringify(res, null, "  "));
+            addContext(self, {
+                title: '400 retrun value',
+                value: res
+            });
+        })
         .end(function (err, res) {
-            try {
-                if (err) {
-                    handleError(err, self);
-                    return done(err);
-                }
-                console.log(info("400 return value: "));
-                console.log(JSON.stringify(res, null, "  "));
-                addContext(self, {
-                    title: '400 retrun value',
-                    value: res
-                });
-                done();
-            } catch (err) {
+            console.timeEnd(info("duration"));
+            if (err) {
                 handleError(err, self);
-                done(err);
+                return done(err);
             }
+            done();
         });
 })
 
 it('should return 400 Bad Request when create a new with empty targetNodes', function (done) {
     console.log(title("\nshould return 400 Bad Request when create a new with empty targetNodes:"));
     let self = this;
+    console.time(info("duration"));
     diagApi.post('')
         .set('Accept', 'application/json')
         .send({
@@ -165,17 +168,20 @@ it('should return 400 Bad Request when create a new with empty targetNodes', fun
             diagnosticTest: pingpong
         })
         .expect(400)
-        .end(function (err, res) {
-            if (err) {
-                handleError(err, self);
-                return done(err);
-            }
+        .expect(function (res) {
             console.log(info("400 return value: "));
             console.log(JSON.stringify(res, null, "  "));
             addContext(self, {
                 title: '400 retrun value',
                 value: res
             });
+        })
+        .end(function (err, res) {
+            console.timeEnd(info("duration"));
+            if (err) {
+                handleError(err, self);
+                return done(err);
+            }
             done();
         });
 })
@@ -183,6 +189,7 @@ it('should return 400 Bad Request when create a new with empty targetNodes', fun
 it('should create a new pingpong diag test', function (done) {
     console.log(title("\nshould create a new pingpong diag test:"));
     let self = this;
+    console.time(info("duration"));
     diagApi.post('')
         .set('Accept', 'application/json')
         .send({
@@ -192,56 +199,53 @@ it('should create a new pingpong diag test', function (done) {
             diagnosticTest: pingpong
         })
         .expect(201)
+        .expect(function (res) {
+            console.log(info("New pingpong job location: ") + res.headers.location);
+            addContext(self, {
+                title: 'New pingpong job location',
+                value: res.headers.location
+            });
+            expect(res.headers.location).to.include('/diagnostics/');
+            let locationData = res.headers.location.split('/');
+            pingpongJobId = locationData[locationData.length - 1];
+        })
         .end(function (err, res) {
-            try {
-                if (err) {
-                    handleError(err, self);
-                    return done(err);
-                }
-                console.log(info("New pingpong job location: ") + res.headers.location);
-                addContext(self, {
-                    title: 'New pingpong job location',
-                    value: res.headers.location
-                });
-                expect(res.headers.location).to.include('/diagnostics/');
-                let locationData = res.headers.location.split('/');
-                pingpongJobId = locationData[locationData.length - 1];
-                done();
-            } catch (err) {
+            console.timeEnd(info("duration"));
+            if (err) {
                 handleError(err, self);
-                done(err);
+                return done(err);
             }
+            done();
         });
 })
 
 it('should return detailed info with a specified diag job id', function (done) {
     console.log(title('\nshould return detailed info with a specified diag job id'));
     let self = this;
+    console.time(info("duration"));
     diagApi.get(`/${pingpongJobId}`)
         .set('Accept', 'application/json')
         .expect(200)
+        .expect(function (res) {
+            console.log(info(`Diag ${pingpongJobId} detailed info:`));
+            console.log(JSON.stringify(res.body, null, "  "));
+            addContext(self, {
+                title: `Diage ${pingpongJobId} detailed info`,
+                value: res.body
+            });
+            assert.isNotEmpty(res.body);
+            let result = res.body;
+            expect(result).to.have.property('createdAt');
+            expect(result['id']).to.eql(Number(pingpongJobId));
+            expect(result).to.have.property('targetNodes');
+        })
         .end(function (err, res) {
-            try {
-                if (err) {
-                    handleError(err, self);
-                    return done(err);
-                }
-                console.log(info(`Diag ${pingpongJobId} detailed info:`));
-                console.log(JSON.stringify(res.body, null, "  "));
-                addContext(self, {
-                    title: `Diage ${pingpongJobId} detailed info`,
-                    value: res.body
-                });
-                assert.isNotEmpty(res.body);
-                let result = res.body;
-                expect(result).to.have.property('createdAt');
-                expect(result['id']).to.eql(Number(pingpongJobId));
-                expect(result).to.have.property('targetNodes');
-                done();
-            } catch (error) {
-                handleError(error, self);
-                done(error);
+            console.timeEnd(info("duration"));
+            if (err) {
+                handleError(err, self);
+                return done(err);
             }
+            done();
         });
 })
 
@@ -253,6 +257,7 @@ it('should get a pinpong diag test result before timeout', function (done) {
     console.log(info(`Job progress  (get state every ${interval} ms): `));
     addContext(this, `Job timeout set to ${timeout} ms`);
     addContext(this, `Job progress (get state every 1000 ms)`);
+    console.time(info("duration"));
     try {
         let loop = Loop.start(
             diagBaseUrl + '/' + pingpongJobId,
@@ -260,8 +265,9 @@ it('should get a pinpong diag test result before timeout', function (done) {
                 next: (res, err) => {
                     if (err) {
                         handleError(err, self);
-                        done(err);
-                        return false;
+                        Loop.stop(loop);
+                        console.timeEnd(info("duration"));
+                        return done(err);
                     }
                     result = res.body;
                     result = JSON.parse(result);
@@ -287,6 +293,7 @@ it('should get a pinpong diag test result before timeout', function (done) {
                         });
                         assert.ok(result.state === 'Finished', 'pingpong diagnostic finished in ' + elapseTime + ' ms.');
                         Loop.stop(loop);
+                        console.timeEnd(info("duration"));
                         return done();
                     }
                     else if (result.state == 'Failed') {
@@ -303,6 +310,7 @@ it('should get a pinpong diag test result before timeout', function (done) {
                         });
                         assert.ok(result.state === 'Failed', 'pingpong diagnostic failed in ' + elapseTime + ' ms.');
                         Loop.stop(loop);
+                        console.timeEnd(info("duration"));
                         return done();
                     }
 
@@ -320,6 +328,7 @@ it('should get a pinpong diag test result before timeout', function (done) {
                         });
                         assert.fail("actual runtime " + elapseTime + ' ms', "expected time " + timeout + ' ms', "The pingpong diag test doesn't finished in expected time, time elapses: " + elapseTime + ' ms, the max time is ' + timeout + ' ms');
                         Loop.stop(loop);
+                        console.timeEnd(info("duration"));
                         return done();
                     }
                     return true;
@@ -338,52 +347,49 @@ it('should get aggregation result with a specified job id', function (done) {
     let self = this;
     console.log(title('\nshould get aggregation result with a specified job id:'));
     addContext(self, `To get aggregationResult of job ${pingpongJobId}`);
+    console.time(info("duration"));
     if (pingpongJobState == "Finished") {
         diagApi.get(`/${pingpongJobId}/aggregationresult`)
             .set('Accept', 'application/json')
             .expect(200)
-            .end((err, res) => {
-                try {
-                    if (err) {
-                        handleError(err, self);
-                        return done(err);
-                    }
-                    console.log(info(`Diag job ${pingpongJobId}'s aggregation result is:`));
-                    console.log(JSON.stringify(JSON.stringify(res.body), null, "  "));
-                    addContext(self, {
-                        title: `Aggregation result`,
-                        value: res.body
-                    });
-                    assert.isNotEmpty(res.body);
-                    done();
-                } catch (error) {
-                    handleError(error, self);
-                    done(error);
+            .expect(function (res) {
+                console.log(info(`Diag job ${pingpongJobId}'s aggregation result is:`));
+                console.log(JSON.stringify(JSON.stringify(res.body), null, "  "));
+                addContext(self, {
+                    title: `Aggregation result`,
+                    value: res.body
+                });
+                assert.isNotEmpty(res.body);
+            })
+            .end(function (err, res) {
+                console.timeEnd(info("duration"));
+                if (err) {
+                    handleError(err, self);
+                    return done(err);
                 }
+                done();
             })
     }
     else {
         diagApi.get(`/${pingpongJobId}/aggregationresult`)
             .set('Accept', 'application/json')
             .expect(404)
+            .expect(function (res) {
+                console.log(info(`Diag job ${pingpongJobId}'s aggregation result is:`));
+                console.log(JSON.stringify(JSON.stringify(res.body), null, "  "));
+                addContext(self, {
+                    title: `Aggregation result`,
+                    value: res.body
+                });
+                assert.isNotEmpty(res.body);
+            })
             .end((err, res) => {
-                try {
-                    if (err) {
-                        handleError(err, self);
-                        return done(err);
-                    }
-                    console.log(info(`Diag job ${pingpongJobId}'s aggregation result is:`));
-                    console.log(JSON.stringify(JSON.stringify(res.body), null, "  "));
-                    addContext(self, {
-                        title: `Aggregation result`,
-                        value: res.body
-                    });
-                    assert.isNotEmpty(res.body);
-                    done();
-                } catch (error) {
-                    handleError(error, self);
-                    done(error);
+                console.timeEnd(info("duration"));
+                if (err) {
+                    handleError(err, self);
+                    return done(err);
                 }
+                done();
             })
     }
 
@@ -392,6 +398,7 @@ it('should get aggregation result with a specified job id', function (done) {
 it('should create a new ring diag test', function (done) {
     console.log(title("\nshould create a new ring diag test:"));
     let self = this;
+    console.time(info("duration"));
     diagApi.post('')
         .set('Accept', 'application/json')
         .send({
@@ -401,25 +408,23 @@ it('should create a new ring diag test', function (done) {
             diagnosticTest: ring
         })
         .expect(201)
+        .expect(function (res) {
+            console.log(info("New ring job location: ") + res.headers.location);
+            addContext(self, {
+                title: 'New ring job location',
+                value: res.headers.location
+            });
+            expect(res.headers.location).to.include('/v1/diagnostics/');
+            let locationData = res.headers.location.split('/');
+            ringJobId = locationData[locationData.length - 1];
+        })
         .end((err, res) => {
-            try {
-                if (err) {
-                    handleError(err, self);
-                    return done(err);
-                }
-                console.log(info("New ring job location: ") + res.headers.location);
-                addContext(self, {
-                    title: 'New ring job location',
-                    value: res.headers.location
-                });
-                expect(res.headers.location).to.include('/v1/diagnostics/');
-                let locationData = res.headers.location.split('/');
-                ringJobId = locationData[locationData.length - 1];
-                done();
-            } catch (err) {
+            console.timeEnd(info("duration"));
+            if (err) {
                 handleError(err, self);
-                done(err);
+                return done(err);
             }
+            done();
         });
 })
 
@@ -427,28 +432,27 @@ it('should cancel a diag test', function (done) {
     console.log(title("\nshould cancel diag test:"));
     console.log(info("The job id to cancel is ") + ringJobId);
     let self = this;
+    console.time(info("duration"));
     diagApi.patch(`/${ringJobId}`)
         .set('Accept', 'application/json')
         .send({
             request: 'cancel'
         })
         .expect(200)
+        .expect(function (res) {
+            console.log(info("The cancel result: "));
+            console.log(JSON.stringify(res.text, null, "  "));
+            addContext(self, {
+                title: 'The cancel result',
+                value: res.text
+            });
+        })
         .end(function (err, res) {
-            try {
-                if (err) {
-                    handleError(err, self);
-                    return done(err);
-                }
-                console.log(info("The cancel result: "));
-                console.log(JSON.stringify(res.text, null, "  "));
-                addContext(self, {
-                    title: 'The cancel result',
-                    value: res.text
-                });
-                done();
-            } catch (error) {
-                handleError(error, self);
-                done(error);
+            console.timeEnd(info("duration"));
+            if (err) {
+                handleError(err, self);
+                return done(err);
             }
+            done();
         })
 })

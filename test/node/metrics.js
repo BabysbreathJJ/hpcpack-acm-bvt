@@ -23,58 +23,56 @@ before(function (done) {
 it('should return metrics categories', function (done) {
     console.log(title(`\nshould return metrics categories:`));
     let self = this;
+    console.time(info("duration"));
     metircsApi.get(`/categories`)
         .set('Accept', 'application/json')
         .expect(200)
+        .expect(function (res) {
+            console.log(info(`Metircs categories:`));
+            console.log(JSON.stringify(res.body, null, "  "));
+            addContext(self, {
+                title: 'Metircs categories',
+                value: res.body
+            });
+            assert.isNotEmpty(res.body);
+            expect(res.body).to.be.an.instanceof(Array);
+            expect(res.body).to.have.lengthOf.above(0);
+            category = res.body[0];
+        })
         .end(function (err, res) {
-            try {
-                if (err) {
-                    handleError(err, self);
-                    return done(err);
-                }
-                console.log(info(`Metircs categories:`));
-                console.log(JSON.stringify(res.body, null, "  "));
-                addContext(self, {
-                    title: 'Metircs categories',
-                    value: res.body
-                });
-                assert.isNotEmpty(res.body);
-                expect(res.body).to.be.an.instanceof(Array);
-                expect(res.body).to.have.lengthOf.above(0);
-                category = res.body[0];
-                done();
-            } catch (error) {
-                handleError(error, self);
-                done(error);
+            console.timeEnd(info("duration"));
+            if (err) {
+                handleError(err, self);
+                return done(err);
             }
+            done();
         })
 })
 
 it('should return metric info of a node', function (done) {
     console.log(title(`\nshould return metric info of a node`));
     let self = this;
+    console.time(info("duration"));
     metircsApi.get(`/${category}`)
         .set('Accept', 'application/json')
         .expect(200)
+        .expect(function (res) {
+            console.log(info(`${category} info of nodes:`));
+            console.log(JSON.stringify(res.body, null, "  "));
+            addContext(self, {
+                title: `${category} info of nodes:`,
+                value: res.body
+            });
+            expect(res.body).to.have.property('category');
+            expect(res.body).to.have.property('values');
+            assert.isNotEmpty(res.body['values']);
+        })
         .end(function (err, res) {
-            try {
-                if (err) {
-                    handleError(err, self);
-                    return done(err);
-                }
-                console.log(info(`${category} info of nodes:`));
-                console.log(JSON.stringify(res.body, null, "  "));
-                addContext(self, {
-                    title: `${category} info of nodes:`,
-                    value: res.body
-                });
-                expect(res.body).to.have.property('category');
-                expect(res.body).to.have.property('values');
-                assert.isNotEmpty(res.body['values']);
-                done();
-            } catch (error) {
-                handleError(error);
-                done(error);
+            console.timeEnd(info("duration"));
+            if (err) {
+                handleError(err, self);
+                return done(err);
             }
+            done();
         })
 })

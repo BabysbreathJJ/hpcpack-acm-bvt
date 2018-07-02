@@ -37,44 +37,41 @@ before(function (done) {
     }
 
     let self = this;
+    console.time(info("duration"));
     clusrunApi.get(`?lastid=${maxNum}&count=${jobNum}&reverse=true`)
         .set('Accept', 'application/json')
         .expect(200)
-        .end(function (err, res) {
-            try {
-                if (err) {
-                    handleError(err, self);
-                    return done(err);
-                }
-                console.log(info('The last 100 clusrun job is: '));
-                console.log(JSON.stringify(res.body, null, "  "));
-                console.log(info("The result body length returned from diag list api: ") + res.body.length);
-                addContext(self, {
-                    title: 'clusrun list size',
-                    value: res.body.length
-                });
-                assert.isNotEmpty(res.body);
-                expect(res.body).to.be.an.instanceof(Array);
-                expect(res.body.length).to.be.above(1);
-                let job = res.body.find(function (ele) {
-                    return ele.state == 'Finished'
-                });
-                if (job == undefined || job == null) {
-                    console.log(error(`Couldn't find a Finished job in recent ${jobNum} jobs`));
-                    assert.fail(`Should find a Finished job in recent ${jobNum} jobs`, '', `Couldn't find a Finished job in recent ${jobNum} jobs`);
-                    return done(err);
-                }
-                jobId = job.id;
-                console.log(info("The selected job id is: ") + jobId);
-                addContext(self, {
-                    title: 'Job id',
-                    value: jobId
-                });
-                done();
-            } catch (err) {
-                handleError(err, self);
-                done(err);
+        .expect(function (res) {
+            console.log(info("The result body length returned from diag list api: ") + res.body.length);
+            addContext(self, {
+                title: 'clusrun list size',
+                value: res.body.length
+            });
+            assert.isNotEmpty(res.body);
+            expect(res.body).to.be.an.instanceof(Array);
+            expect(res.body.length).to.be.above(1);
+            let job = res.body.find(function (ele) {
+                return ele.state == 'Finished'
+            });
+            if (job == undefined || job == null) {
+                console.log(error(`Couldn't find a Finished job in recent ${jobNum} jobs`));
+                assert.fail(`Should find a Finished job in recent ${jobNum} jobs`, '', `Couldn't find a Finished job in recent ${jobNum} jobs`);
+                return done(err);
             }
+            jobId = job.id;
+            console.log(info("The selected job id is: ") + jobId);
+            addContext(self, {
+                title: 'Job id',
+                value: jobId
+            });
+        })
+        .end(function (err, res) {
+            console.timeEnd(info("duration"));
+            if (err) {
+                handleError(err, self);
+                return done(err);
+            }
+            done();
         })
 })
 
@@ -83,37 +80,36 @@ it('should return task list with a specified job id', function (done) {
     console.log(info("Job id is: ") + jobId);
     addContext(this, `Job id is ${jobId}`);
     let self = this;
+    console.time(info("duration"));
     clusrunApi.get(`/${jobId}/tasks`)
         .set('Accept', 'application/json')
         .expect(200)
+        .expect(function (res) {
+            result = res.body;
+            assert.isArray(result);
+            addContext(self, {
+                title: 'Result body',
+                value: result
+            });
+            console.log(info(`The task number of job ${jobId} is: `) + result.length);
+            expect(result.length).to.be.above(0);
+            let firstTask = result[0];
+            expect(firstTask).to.have.property('jobId', Number(jobId));
+            expect(firstTask).to.have.property('jobType', 'ClusRun');
+            taskId = firstTask['id'];
+            console.log(info(`The first task id of job ${jobId}: `) + taskId);
+            addContext(self, {
+                title: `The first task id of job ${jobId}`,
+                value: taskId
+            });
+        })
         .end(function (err, res) {
-            try {
-                if (err) {
-                    handleError(err, self);
-                    return done(err);
-                }
-                result = res.body;
-                assert.isArray(result);
-                addContext(self, {
-                    title: 'Result body',
-                    value: result
-                });
-                console.log(info(`The task number of job ${jobId} is: `) + result.length);
-                expect(result.length).to.be.above(0);
-                let firstTask = result[0];
-                expect(firstTask).to.have.property('jobId', Number(jobId));
-                expect(firstTask).to.have.property('jobType', 'ClusRun');
-                taskId = firstTask['id'];
-                console.log(info(`The first task id of job ${jobId}: `) + taskId);
-                addContext(self, {
-                    title: `The first task id of job ${jobId}`,
-                    value: taskId
-                });
-                done();
-            } catch (error) {
-                handleError(error, self);
-                done(error);
+            console.timeEnd(info("duration"));
+            if (err) {
+                handleError(err, self);
+                return done(err);
             }
+            done();
         })
 })
 
@@ -125,30 +121,29 @@ it('should get detailed task info with a specified task id', function (done) {
     addContext(this, `Task id is ${taskId}`);
     expect(taskId).to.be.a('number');
     let self = this;
+    console.time(info("duration"));
     clusrunApi.get(`/${jobId}/tasks/${taskId}`)
         .set('Accpet', 'application/json')
         .expect(200)
+        .expect(function (res) {
+            assert.isNotEmpty(res.body);
+            addContext(self, {
+                title: 'Result body',
+                value: res.body
+            });
+            console.log(JSON.stringify(res.body, null, "  "));
+            let taskInfo = res.body;
+            expect(taskInfo).to.have.property('jobId', Number(jobId));
+            expect(taskInfo).to.have.property('id', taskId);
+            expect(taskInfo).to.have.property('state');
+        })
         .end(function (err, res) {
-            try {
-                if (err) {
-                    handleError(err, self);
-                    return done(err);
-                }
-                assert.isNotEmpty(res.body);
-                addContext(self, {
-                    title: 'Result body',
-                    value: res.body
-                });
-                console.log(JSON.stringify(res.body, null, "  "));
-                let taskInfo = res.body;
-                expect(taskInfo).to.have.property('jobId', Number(jobId));
-                expect(taskInfo).to.have.property('id', taskId);
-                expect(taskInfo).to.have.property('state');
-                done();
-            } catch (error) {
-                handleError(error, self);
-                done(error);
+            console.timeEnd(info("duration"));
+            if (err) {
+                handleError(err, self);
+                return done(err);
             }
+            done();
         });
 })
 
@@ -160,32 +155,31 @@ it('should get a task result with a specified task id', function (done) {
     addContext(this, `Task id is ${taskId}`);
     expect(taskId).to.be.a('number');
     let self = this;
+    console.time(info("duration"));
     clusrunApi.get(`/${jobId}/tasks/${taskId}/result`)
         .set('Accept', 'application/json')
         .expect(200)
+        .expect(function (res) {
+            assert.isNotEmpty(res.body);
+            addContext(self, {
+                title: "Result body",
+                value: res.body
+            });
+            console.log(info(`task ${taskId} result is:`));
+            console.log(JSON.stringify(res.body, null, "  "));
+            let taskRes = res.body;
+            expect(taskRes).to.have.property('jobId', jobId);
+            expect(taskRes).to.have.property('taskId', taskId);
+            expect(taskRes).to.have.property('resultKey');
+            resultKey = taskRes['resultKey'];
+        })
         .end(function (err, res) {
-            try {
-                if (err) {
-                    handleError(err, self);
-                    return done(err);
-                }
-                assert.isNotEmpty(res.body);
-                addContext(self, {
-                    title: "Result body",
-                    value: res.body
-                });
-                console.log(info(`task ${taskId} result is:`));
-                console.log(JSON.stringify(res.body, null, "  "));
-                let taskRes = res.body;
-                expect(taskRes).to.have.property('jobId', jobId);
-                expect(taskRes).to.have.property('taskId', taskId);
-                expect(taskRes).to.have.property('resultKey');
-                resultKey = taskRes['resultKey'];
-                done();
-            } catch (error) {
-                handleError(error, self);
-                done(error);
+            console.timeEnd(info("duration"));
+            if (err) {
+                handleError(err, self);
+                return done(err);
             }
+            done();
         });
 })
 
@@ -197,27 +191,25 @@ it('should get the whole output of a task', function (done) {
     addContext(this, `Task id is ${taskId}`);
     expect(taskId).to.be.a('number');
     let self = this;
+    console.time(info("duration"));
     outputApi.get(`/${resultKey}/raw`)
         .set('Accept', 'application/json')
         .expect(200)
+        .expect(function (res) {
+            console.log(info(`task ${taskId} whole output:`));
+            console.log(JSON.stringify(res.body), null, "  ");
+            addContext(self, {
+                title: "Result body",
+                value: res.body
+            });
+        })
         .end(function (err, res) {
-            try {
-                if (err) {
-                    handleError(err, self);
-                    return done(err);
-                }
-                console.log(info(`task ${taskId} whole output:`));
-                console.log(JSON.stringify(res.body), null, "  ");
-                addContext(self, {
-                    title: "Result body",
-                    value: res.body
-                });
-                assert.isNotEmpty(res.body);
-                done();
-            } catch (error) {
-                handleError(error, self);
-                done(error);
+            console.timeEnd(info("duration"));
+            if (err) {
+                handleError(err, self);
+                return done(err);
             }
+            done();
         });
 
 })
@@ -232,29 +224,28 @@ it('should get partial output of a task', function (done) {
     addContext(this, `Task id is ${taskId}`);
 
     let self = this;
+    console.time(info("duration"));
     outputApi.get(`/${resultKey}/page?offset=${outputInitOffset}&pageSize=${outputPageSize}`)
         .set('Accept', 'application/json')
         .expect(200)
+        .expect(function (res) {
+            assert.isNotEmpty(res.body);
+            console.log(info(`task ${taskId} partial output:`));
+            console.log(JSON.stringify(res.body), null, "  ");
+            addContext(self, {
+                title: 'Output result',
+                value: res.body
+            });
+            let result = res.body;
+            expect(result).to.have.property('offset');
+            expect(result).to.have.property('size');
+        })
         .end(function (err, res) {
-            try {
-                if (err) {
-                    handleError(err, self);
-                    return done(er);
-                }
-                assert.isNotEmpty(res.body);
-                console.log(info(`task ${taskId} partial output:`));
-                console.log(JSON.stringify(res.body), null, "  ");
-                addContext(self, {
-                    title: 'Output result',
-                    value: res.body
-                });
-                let result = res.body;
-                expect(result).to.have.property('offset');
-                expect(result).to.have.property('size');
-                done();
-            } catch (error) {
-                handleError(error, self);
-                done(error);
+            console.timeEnd(info("duration"));
+            if (err) {
+                handleError(err, self);
+                return done(er);
             }
+            done();
         });
 })

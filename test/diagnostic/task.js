@@ -16,8 +16,6 @@ var expect = common.expect,
 let jobId = -1;
 let taskId = -1;
 let jobNum = 100;
-let maxNum = Number.MAX_VALUE;
-
 
 before(function (done) {
     console.log(title("\nBefore all hook of diag task: "));
@@ -33,44 +31,40 @@ before(function (done) {
     }
 
     let self = this;
-    diagApi.get(`?lastid=${maxNum}&count=${jobNum}&reverse=true`)
+    console.time(info("duration"));
+    diagApi.get(`?lastid=0&count=${jobNum}&reverse=true`)
         .set('Accept', 'application/json')
         .expect(200)
-        .end(function (err, res) {
-            try {
-                if (err) {
-                    handleError(err, self);
-                    return done(err);
-                }
-                console.log(info('The last 100 diag job is: '));
-                console.log(JSON.stringify(res.body, null, "  "));
-                console.log(info("The result body length returned from diag list api: ") + res.body.length);
-                addContext(self, {
-                    title: 'Diag list size',
-                    value: res.body.length
-                });
-                assert.isNotEmpty(res.body);
-                expect(res.body).to.be.an.instanceof(Array);
-                expect(res.body.length).to.be.above(1);
-                let job = res.body.find(function (ele) {
-                    return ele.state == 'Finished'
-                });
-                if (job == undefined || job == null) {
-                    console.log(error(`Couldn't find a Finished job in recent ${jobNum} jobs`));
-                    assert.fail(`Should find a Finished job in recent ${jobNum} jobs`, '', `Couldn't find a Finished job in recent ${jobNum} jobs`);
-                    return done(err);
-                }
-                jobId = job.id;
-                console.log(info("The selected job id is: ") + jobId);
-                addContext(self, {
-                    title: 'Job id',
-                    value: jobId
-                });
-                done();
-            } catch (err) {
-                handleError(err, self);
-                done(err);
+        .expect(function (res) {
+            console.log(info("The result body length returned from diag list api: ") + res.body.length);
+            addContext(self, {
+                title: 'Diag list size',
+                value: res.body.length
+            });
+            assert.isNotEmpty(res.body);
+            expect(res.body).to.be.an.instanceof(Array);
+            expect(res.body.length).to.be.above(1);
+            let job = res.body.find(function (ele) {
+                return ele.state == 'Finished'
+            });
+            if (job == undefined || job == null) {
+                console.log(error(`Couldn't find a Finished job in recent ${jobNum} jobs`));
+                assert.fail(`Should find a Finished job in recent ${jobNum} jobs`, '', `Couldn't find a Finished job in recent ${jobNum} jobs`);
             }
+            jobId = job.id;
+            console.log(info("The selected job id is: ") + jobId);
+            addContext(self, {
+                title: 'Job id',
+                value: jobId
+            });
+        })
+        .end(function (err, res) {
+            console.timeEnd(info("duration"));
+            if (err) {
+                handleError(err, self);
+                return done(err);
+            }
+            done();
         })
 })
 
@@ -79,37 +73,36 @@ it('should return task list with a specified job id', function (done) {
     console.log(info("Job id is: ") + jobId);
     addContext(this, `Job id is ${jobId}`);
     let self = this;
+    console.time(info("duration"));
     diagApi.get(`/${jobId}/tasks`)
         .set('Accept', 'application/json')
         .expect(200)
+        .expect(function (res) {
+            result = res.body;
+            assert.isArray(result);
+            addContext(self, {
+                title: 'Result body',
+                value: result
+            });
+            console.log(info(`The task number of job ${jobId} is: `) + result.length);
+            expect(result.length).to.be.above(0);
+            let firstTask = result[0];
+            expect(firstTask).to.have.property('jobId', Number(jobId));
+            expect(firstTask).to.have.property('jobType', 'Diagnostics');
+            taskId = firstTask['id'];
+            console.log(info(`The first task id of job ${jobId}: `) + taskId);
+            addContext(self, {
+                title: `The first task id of job ${jobId}`,
+                value: taskId
+            });
+        })
         .end(function (err, res) {
-            try {
-                if (err) {
-                    handleError(err, self);
-                    return done(err);
-                }
-                result = res.body;
-                assert.isArray(result);
-                addContext(self, {
-                    title: 'Result body',
-                    value: result
-                });
-                console.log(info(`The task number of job ${jobId} is: `) + result.length);
-                expect(result.length).to.be.above(0);
-                let firstTask = result[0];
-                expect(firstTask).to.have.property('jobId', Number(jobId));
-                expect(firstTask).to.have.property('jobType', 'Diagnostics');
-                taskId = firstTask['id'];
-                console.log(info(`The first task id of job ${jobId}: `) + taskId);
-                addContext(self, {
-                    title: `The first task id of job ${jobId}`,
-                    value: taskId
-                });
-                done();
-            } catch (error) {
-                handleError(error, self);
-                done(error);
+            console.timeEnd(info("duration"));
+            if (err) {
+                handleError(err, self);
+                return done(err);
             }
+            done();
         })
 })
 
@@ -121,30 +114,29 @@ it('should get detailed task info with a specified task id', function (done) {
     addContext(this, `Task id is ${taskId}`);
     expect(taskId).to.be.a('number');
     let self = this;
+    console.time(info("duration"));
     diagApi.get(`/${jobId}/tasks/${taskId}`)
         .set('Accpet', 'application/json')
         .expect(200)
+        .expect(function (res) {
+            assert.isNotEmpty(res.body);
+            addContext(self, {
+                title: 'Result body',
+                value: res.body
+            });
+            console.log(JSON.stringify(res.body, null, "  "));
+            let taskInfo = res.body;
+            expect(taskInfo).to.have.property('jobId', Number(jobId));
+            expect(taskInfo).to.have.property('id', taskId);
+            expect(taskInfo).to.have.property('state');
+        })
         .end(function (err, res) {
-            try {
-                if (err) {
-                    handleError(err, self);
-                    return done(err);
-                }
-                assert.isNotEmpty(res.body);
-                addContext(self, {
-                    title: 'Result body',
-                    value: res.body
-                });
-                console.log(JSON.stringify(res.body, null, "  "));
-                let taskInfo = res.body;
-                expect(taskInfo).to.have.property('jobId', Number(jobId));
-                expect(taskInfo).to.have.property('id', taskId);
-                expect(taskInfo).to.have.property('state');
-                done();
-            } catch (error) {
-                handleError(error, self);
-                done(error);
+            console.timeEnd(info("duration"));
+            if (err) {
+                handleError(err, self);
+                return done(err);
             }
+            done();
         });
 })
 
@@ -156,30 +148,29 @@ it('should get a task result with a specified task id', function (done) {
     addContext(this, `Task id is ${taskId}`);
     expect(taskId).to.be.a('number');
     let self = this;
+    console.time(info("duration"));
     diagApi.get(`/${jobId}/tasks/${taskId}/result`)
         .set('Accept', 'application/json')
         .expect(200)
+        .expect(function (res) {
+            assert.isNotEmpty(res.body);
+            addContext(self, {
+                title: "Result body",
+                value: res.body
+            });
+            console.log(info(`task ${taskId} result is:`));
+            console.log(JSON.stringify(res.body, null, "  "));
+            let taskRes = res.body;
+            expect(taskRes).to.have.property('jobId', jobId);
+            expect(taskRes).to.have.property('taskId', taskId);
+            expect(taskRes).to.have.property('resultKey');
+        })
         .end(function (err, res) {
-            try {
-                if (err) {
-                    handleError(err, self);
-                    return done(err);
-                }
-                assert.isNotEmpty(res.body);
-                addContext(self, {
-                    title: "Result body",
-                    value: res.body
-                });
-                console.log(info(`task ${taskId} result is:`));
-                console.log(JSON.stringify(res.body, null, "  "));
-                let taskRes = res.body;
-                expect(taskRes).to.have.property('jobId', jobId);
-                expect(taskRes).to.have.property('taskId', taskId);
-                expect(taskRes).to.have.property('resultKey');
-                done();
-            } catch (error) {
-                handleError(error, self);
-                done(error);
+            console.timeEnd(info("duration"));
+            if (err) {
+                handleError(err, self);
+                return done(err);
             }
+            done();
         });
 })
