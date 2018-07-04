@@ -99,11 +99,11 @@ it('should return diag tests list', function (done) {
                     title: 'pingpong test',
                     value: pingpong
                 });
-                pingpong['arguments'] = "[]";
+                pingpong['arguments'] = [];
                 ring = res.body.find((e) => {
                     return e.name == 'ring';
                 });
-                ring['arguments'] = "[]";
+                ring['arguments'] = [];
                 addContext(self, {
                     title: 'ring test: ',
                     value: ring
