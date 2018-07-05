@@ -253,6 +253,7 @@ it('should get a pinpong diag test result before timeout', function (done) {
     let startTime = new Date();
     timeout = nodes.length * estimatedJobFinishTime;
     this.timeout(timeout);
+    let self = this;
     console.log(info(`Timeout for pingpong job is: ${timeout} ms.`));
     console.log(info(`Job progress  (get state every ${interval} ms): `));
     addContext(this, `Job timeout set to ${timeout} ms`);
@@ -262,7 +263,7 @@ it('should get a pinpong diag test result before timeout', function (done) {
         let loop = Loop.start(
             diagBaseUrl + '/' + pingpongJobId,
             {
-                next: (res, err) => {
+                next: function (res, err) {
                     if (err) {
                         handleError(err, self);
                         Loop.stop(loop);
@@ -273,7 +274,7 @@ it('should get a pinpong diag test result before timeout', function (done) {
                     result = JSON.parse(result);
                     pingpongJobState = result.state;
                     console.log(info("Job state: ") + result.state);
-                    addContext(this, {
+                    addContext(self, {
                         title: 'Job state',
                         value: result.state
                     });
@@ -283,11 +284,11 @@ it('should get a pinpong diag test result before timeout', function (done) {
                         console.log(info(`Job ends with Finished in ${elapseTime} ms`));
                         console.log(info(`The result returned when job finished is:`));
                         console.log(JSON.stringify(result, null, "  "));
-                        addContext(this, {
+                        addContext(self, {
                             title: 'Cost time',
                             value: `Job ends with Finished in ${elapseTime} ms`
                         });
-                        addContext(this, {
+                        addContext(self, {
                             title: 'Final result',
                             value: result
                         });
@@ -300,11 +301,11 @@ it('should get a pinpong diag test result before timeout', function (done) {
                         console.log(info(`Job ends with Failed in ${elapseTime} ms`));
                         console.log(info(`The result returned when job failed is:`));
                         console.log(JSON.stringify(result, null, "  "));
-                        addContext(this, {
+                        addContext(self, {
                             title: 'Cost time',
                             value: `Job ends with Failed in ${elapseTime} ms`
                         });
-                        addContext(this, {
+                        addContext(self, {
                             title: 'Final result',
                             value: result
                         });
@@ -318,11 +319,11 @@ it('should get a pinpong diag test result before timeout', function (done) {
                         console.log(info(`Job ends with timeout in ${elapseTime} ms`));
                         console.log(info(`The result returned when job timeout is:`));
                         console.log(JSON.stringify(result, null, "  "));
-                        addContext(this, {
+                        addContext(self, {
                             title: 'Cost time',
                             value: `Test ends with timeout in ${elapseTime} ms`
                         });
-                        addContext(this, {
+                        addContext(self, {
                             title: 'Job result when timeout',
                             value: result
                         });
@@ -337,7 +338,7 @@ it('should get a pinpong diag test result before timeout', function (done) {
             interval
         );
     } catch (error) {
-        handleError(error, this);
+        handleError(error, self);
         done(error);
     }
 
