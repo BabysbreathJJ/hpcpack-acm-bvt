@@ -205,7 +205,7 @@ it('should return node metric history', function (done) {
             });
             assert.isNotEmpty(res.body);
             let result = res.body;
-            expect(result).to.have.property('span');
+            expect(result).to.have.property('rangeSeconds');
             expect(result).to.have.property('data');
             assert.isNotEmpty(result['data']);
         })
