@@ -3,7 +3,6 @@ const request = require("request");
 module.exports = class Loop {
     static start(url, timeout, observer, interval = 1500) {
         let looper = { url: url, ended: false };
-        console.log(`The timeout is ${timeout}`);
 
         let _loop = () => {
             if (looper.ended) {

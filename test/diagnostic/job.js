@@ -337,14 +337,14 @@ it('should get a pinpong diag test result before timeout', function (done) {
                     console.log(JSON.stringify(result, null, "  "));
                     addContext(self, {
                         title: 'Cost time',
-                        value: `Test ends with timeout in ${maxTime - endTime} ms`
+                        value: `Test ends with timeout in ${maxTime - endTime > 0 ? maxTime - endTime : (endTime - maxTime + timeout)} ms`
                     });
                     addContext(self, {
                         title: 'Job result when timeout',
                         value: result
                     });
                     try {
-                        assert.fail(`actual runtime ${maxTime - endTime} ms`, "expected time " + timeout + ' ms', `The pingpong diag test doesn't finished in expected time, time elapses:  ${maxTime - endTime} ms`, `the max time is ${timeout} ms`);
+                        assert.fail(`actual runtime ${maxTime - endTime > 0 ? maxTime - endTime : (endTime - maxTime + timeout)} ms`, "expected time " + timeout + ' ms', `The pingpong diag test doesn't finished in expected time, time elapses: ${maxTime - endTime > 0 ? maxTime - endTime : (endTime - maxTime + timeout)} ms`, `the max time is ${timeout} ms`);
                     } catch (error) {
                         handleError(error, self);
                         done(error);
