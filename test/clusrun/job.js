@@ -25,14 +25,18 @@ before(function (done) {
     });
 
     if (URL == '') {
-        assert.fail('Should have base url', '', 'The test stopped by could not get base url, please confirm if you have passed one to run bvt.');
-        return done(err);
+        try {
+            assert.fail('Should have base url', '', 'The test stopped by could not get base url, please confirm if you have passed one to run bvt.');
+        } catch (error) {
+            return done(error);
+        }
     }
 
     let self = this;
-    console.time(info("duration"));
+    console.time(info("clusrun job-before all hook get nodes duration"));
     api.get('/nodes')
         .set('Accept', 'application/json')
+        .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
             console.log(info("The result body length returned from node api: ") + res.body.length);
@@ -49,33 +53,39 @@ before(function (done) {
             });
         })
         .end(function (err, res) {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
             }
             done();
+            console.timeEnd(info("clusrun job-before all hook get nodes duration"));
         })
 
 })
 
 it('should have nodes data', function (done) {
     console.log(title("\nshould have nodes data:"));
-    assert.isNotEmpty(nodes);
-    addContext(this, {
-        title: 'nodes',
-        value: nodes
-    });
-    console.log(info("Health nodes: ") + nodes);
+    try {
+        addContext(this, {
+            title: 'nodes',
+            value: nodes
+        });
+        console.log(info("Health nodes: ") + nodes);
+        assert.isNotEmpty(nodes);
+    } catch (error) {
+        handleError(error, this);
+        return done(error);
+    }
     done();
 })
 
 it('should return 400 Bad Request when create a new clusrun without commandline property', function (done) {
     console.log(title('\nshould return 400 Bad Request when create a new clusrun without commandline: '));
     let self = this;
-    console.time(info("duration"));
+    console.time(info("clusrun-400 without commandline property duration"));
     clusrunApi.post('')
         .set('Accept', 'application/json')
+        .timeout(perCallCost)
         .send({
             targetNodes: nodes
         })
@@ -89,21 +99,22 @@ it('should return 400 Bad Request when create a new clusrun without commandline 
             });
         })
         .end(function (err, res) {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
             }
             done();
+            console.timeEnd(info("clusrun-400 without commandline property duration"));
         })
 })
 
 it('should return 400 Bad Request when create a new clusrun without targetNodes property', function (done) {
     console.log(title('\nshould return 400 Bad Request when create a new clusrun without targetNodes property:'));
     let self = this;
-    console.time(info("duration"));
+    console.time(info("clusrun-400 without target nodes duration"));
     clusrunApi.post('')
         .set('Accept', 'application/json')
+        .timeout(perCallCost)
         .send({
             commandLine: "whoami"
         })
@@ -117,21 +128,22 @@ it('should return 400 Bad Request when create a new clusrun without targetNodes 
             });
         })
         .end(function (err, res) {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
             }
             done();
+            console.timeEnd(info("clusrun-400 without target nodes duration"));
         })
 })
 
 it('should create a new clusrun job', function (done) {
     console.log(title("\nshould create a new clusrun job"));
     let self = this;
-    console.time(info("duration"));
+    console.time(info("clusrun-create a new clusrun duration"));
     clusrunApi.post('')
         .set('Accept', 'application/json')
+        .timeout(perCallCost)
         .send({
             commandLine: "whoami",
             targetNodes: nodes
@@ -148,21 +160,22 @@ it('should create a new clusrun job', function (done) {
             clusrunJobId = locationData[locationData.length - 1];
         })
         .end(function (err, res) {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
             }
             done();
+            console.timeEnd(info("clusrun-create a new clusrun duration"));
         })
 })
 
 it('should cancel a clusrun job', function (done) {
     console.log(title('\nshould cancel a clusrun job'));
     let self = this;
-    console.time(info("duration"));
+    console.time(info("clusurn-cancel a clusrun duration"));
     clusrunApi.patch(`/${clusrunJobId}`)
         .set('Accept', 'application/json')
+        .timeout(perCallCost)
         .send({
             request: 'cancel'
         })
@@ -176,21 +189,22 @@ it('should cancel a clusrun job', function (done) {
             });
         })
         .end(function (err, res) {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
             }
             done();
+            console.timeEnd(info("clusurn-cancel a clusrun duration"));
         })
 })
 
 it('should return detailed info with a specified clusrun job id', function (done) {
     console.log(title('\nshould return detailed job info with a specified clusrun job id'));
     let self = this;
-    console.time(info("duration"));
+    console.time(info("clusrun-job detailed info duration"));
     clusrunApi.get(`/${clusrunJobId}`)
         .set('Accept', 'application/json')
+        .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
             console.log(info(`Clusrun ${clusrunJobId} detailed info:`));
@@ -206,12 +220,12 @@ it('should return detailed info with a specified clusrun job id', function (done
             expect(result).to.have.property('targetNodes');
         })
         .end(function (err, res) {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
             }
             done();
+            console.timeEnd(info("clusrun-job detailed info duration"));
         })
 })
 

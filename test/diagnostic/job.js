@@ -33,14 +33,18 @@ before(function (done) {
         value: `${URL}/nodes`
     });
     if (URL == '') {
-        assert.fail('Should have base url', '', 'The test stopped by could not get base url, please confirm if you have passed one to run bvt.');
-        return done(err);
+        try {
+            assert.fail('Should have base url', '', 'The test stopped by could not get base url, please confirm if you have passed one to run bvt.');
+        } catch (error) {
+            return done(error);
+        }
     }
 
     let self = this;
-    console.time(info("duration"));
+    console.time(info("diag job-before all hook get nodes duration"));
     api.get('/nodes')
         .set('Accept', 'application/json')
+        .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
             console.log(info("The result body length returned from node api: ") + res.body.length);
@@ -57,32 +61,38 @@ before(function (done) {
             });
         })
         .end(function (err, res) {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
             }
             done();
+            console.timeEnd(info("diag job-before all hook get nodes duration"));
         })
 })
 
 it('should have nodes data', function (done) {
     console.log(title("\nshould have nodes data:"));
-    assert.isNotEmpty(nodes);
-    addContext(this, {
-        title: 'nodes',
-        value: nodes
-    });
-    console.log(info("Health nodes: ") + nodes);
+    try {
+        addContext(this, {
+            title: 'nodes',
+            value: nodes
+        });
+        console.log(info("Health nodes: ") + nodes);
+        assert.isNotEmpty(nodes);
+    } catch (error) {
+        handleError(error, this);
+        return done(error);
+    }
     done();
 })
 
 it('should return diag tests list', function (done) {
     console.log(title("\nshould return diag tests list:"));
     let self = this;
-    console.time(info("duration"));
+    console.time(info("diag job-tests duration"));
     diagApi.get('/tests')
         .set('Accept', 'application/json')
+        .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
             assert.isArray(res.body);
@@ -115,21 +125,22 @@ it('should return diag tests list', function (done) {
             }
         })
         .end(function (err, res) {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
             }
             done();
+            console.timeEnd(("diag job-tests duration"));
         });
 })
 
 it('should return 400 Bad Request when create a new diag with empty diagnosticTest property', function (done) {
     console.log(title("\nshould return 400 Bad Request when create a new diag with empty diagnosticTest:"));
     let self = this;
-    console.time(info("duration"));
+    console.time(info("diag job-400 empty diganosticTest duration"));
     diagApi.post('')
         .set('Accept', 'application/json')
+        .timeout(perCallCost)
         .send({
             name: 'BVT-empty-diag-test' + getTime(),
             targetNodes: nodes,
@@ -146,21 +157,22 @@ it('should return 400 Bad Request when create a new diag with empty diagnosticTe
             });
         })
         .end(function (err, res) {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
             }
             done();
+            console.timeEnd(info("diag job-400 empty diganosticTest duration"));
         });
 })
 
 it('should return 400 Bad Request when create a new with empty targetNodes', function (done) {
     console.log(title("\nshould return 400 Bad Request when create a new with empty targetNodes:"));
     let self = this;
-    console.time(info("duration"));
+    console.time(info("diag job- 400 empty targetNodes duration"));
     diagApi.post('')
         .set('Accept', 'application/json')
+        .timeout(perCallCost)
         .send({
             name: 'BVT-empty-diag-test' + getTime(),
             targetNodes: [],
@@ -177,21 +189,22 @@ it('should return 400 Bad Request when create a new with empty targetNodes', fun
             });
         })
         .end(function (err, res) {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
             }
             done();
+            console.timeEnd(info("diag job- 400 empty targetNodes duration"));
         });
 })
 
 it('should create a new pingpong diag test', function (done) {
     console.log(title("\nshould create a new pingpong diag test:"));
     let self = this;
-    console.time(info("duration"));
+    console.time(info("diag job-create a new pingpong duration"));
     diagApi.post('')
         .set('Accept', 'application/json')
+        .timeout(perCallCost)
         .send({
             name: 'BVT-pingpong-test' + getTime(),
             targetNodes: nodes,
@@ -210,21 +223,22 @@ it('should create a new pingpong diag test', function (done) {
             pingpongJobId = locationData[locationData.length - 1];
         })
         .end(function (err, res) {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
             }
             done();
+            console.timeEnd(info("diag job-create a new pingpong duration"));
         });
 })
 
 it('should return detailed info with a specified diag job id', function (done) {
     console.log(title('\nshould return detailed info with a specified diag job id'));
     let self = this;
-    console.time(info("duration"));
+    console.time(info("diag job-detialed job info duration"));
     diagApi.get(`/${pingpongJobId}`)
         .set('Accept', 'application/json')
+        .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
             console.log(info(`Diag ${pingpongJobId} detailed info:`));
@@ -240,118 +254,120 @@ it('should return detailed info with a specified diag job id', function (done) {
             expect(result).to.have.property('targetNodes');
         })
         .end(function (err, res) {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
             }
             done();
+            console.timeEnd(info("diag job-detialed job info duration"));
         });
 })
 
 it('should get a pinpong diag test result before timeout', function (done) {
-    let startTime = new Date();
-    timeout = nodes.length * estimatedJobFinishTime;
-    this.timeout(timeout);
+    let timeout = nodes.length * estimatedJobFinishTime;
+    let maxTime = new Date().getTime() + timeout;
     let self = this;
     console.log(info(`Timeout for pingpong job is: ${timeout} ms.`));
     console.log(info(`Job progress  (get state every ${interval} ms): `));
     addContext(this, `Job timeout set to ${timeout} ms`);
     addContext(this, `Job progress (get state every 1000 ms)`);
-    console.time(info("duration"));
-    try {
-        let loop = Loop.start(
-            diagBaseUrl + '/' + pingpongJobId,
-            {
-                next: function (res, err) {
-                    if (err) {
-                        handleError(err, self);
-                        Loop.stop(loop);
-                        console.timeEnd(info("duration"));
-                        return done(err);
+    console.time(info("diag job-pingpong result duration"));
+    let loop = Loop.start(
+        diagBaseUrl + '/' + pingpongJobId,
+        perCallCost,
+        {
+            next: function (res, err) {
+                let endTime = new Date().getTime();
+                if (err) {
+                    console.log(err);
+                    if (err.code == 'ETIMEDOUT' && endTime < maxTime) {
+                        return true;
                     }
-                    result = res.body;
-                    result = JSON.parse(result);
-                    pingpongJobState = result.state;
-                    console.log(info("Job state: ") + result.state);
-                    addContext(self, {
-                        title: 'Job state',
-                        value: result.state
-                    });
-                    let endTime = new Date();
-                    let elapseTime = endTime - startTime;
-                    if (result.state == 'Finished') {
-                        console.log(info(`Job ends with Finished in ${elapseTime} ms`));
-                        console.log(info(`The result returned when job finished is:`));
-                        console.log(JSON.stringify(result, null, "  "));
-                        addContext(self, {
-                            title: 'Cost time',
-                            value: `Job ends with Finished in ${elapseTime} ms`
-                        });
-                        addContext(self, {
-                            title: 'Final result',
-                            value: result
-                        });
-                        assert.ok(result.state === 'Finished', 'pingpong diagnostic finished in ' + elapseTime + ' ms.');
-                        Loop.stop(loop);
-                        console.timeEnd(info("duration"));
-                        return done();
-                    }
-                    else if (result.state == 'Failed') {
-                        console.log(info(`Job ends with Failed in ${elapseTime} ms`));
-                        console.log(info(`The result returned when job failed is:`));
-                        console.log(JSON.stringify(result, null, "  "));
-                        addContext(self, {
-                            title: 'Cost time',
-                            value: `Job ends with Failed in ${elapseTime} ms`
-                        });
-                        addContext(self, {
-                            title: 'Final result',
-                            value: result
-                        });
-                        assert.ok(result.state === 'Failed', 'pingpong diagnostic failed in ' + elapseTime + ' ms.');
-                        Loop.stop(loop);
-                        console.timeEnd(info("duration"));
-                        return done();
-                    }
-
-                    if (elapseTime > timeout) {
-                        console.log(info(`Job ends with timeout in ${elapseTime} ms`));
-                        console.log(info(`The result returned when job timeout is:`));
-                        console.log(JSON.stringify(result, null, "  "));
-                        addContext(self, {
-                            title: 'Cost time',
-                            value: `Test ends with timeout in ${elapseTime} ms`
-                        });
-                        addContext(self, {
-                            title: 'Job result when timeout',
-                            value: result
-                        });
-                        assert.fail("actual runtime " + elapseTime + ' ms', "expected time " + timeout + ' ms', "The pingpong diag test doesn't finished in expected time, time elapses: " + elapseTime + ' ms, the max time is ' + timeout + ' ms');
-                        Loop.stop(loop);
-                        console.timeEnd(info("duration"));
-                        return done();
-                    }
-                    return true;
+                    handleError(err, self);
+                    console.timeEnd(info("diag job-pingpong result duration"));
+                    done(err);
+                    return false;
                 }
-            },
-            interval
-        );
-    } catch (error) {
-        handleError(error, self);
-        done(error);
-    }
 
+                result = res.body;
+                result = JSON.parse(result);
+                pingpongJobState = result.state;
+                console.log(info("Job state: ") + result.state);
+                addContext(self, {
+                    title: 'Job state',
+                    value: result.state
+                });
+                if (result.state == 'Finished') {
+                    console.log(info(`Job ends with Finished in ${maxTime - endTime} ms`));
+                    console.log(info(`The result returned when job finished is:`));
+                    console.log(JSON.stringify(result, null, "  "));
+                    addContext(self, {
+                        title: 'Cost time',
+                        value: `Job ends with Finished in ${maxTime - endTime} ms`
+                    });
+                    addContext(self, {
+                        title: 'Final result',
+                        value: result
+                    });
+                    assert.ok(result.state === 'Finished', `pingpong diagnostic finished in ${maxTime - endTime} ms.`);
+                    console.timeEnd(info("diag job-pingpong result duration"));
+                    done();
+                    return false;
+                }
+                else if (result.state == 'Failed') {
+                    console.log(info(`Job ends with Failed in ${maxTime - endTime} ms`));
+                    console.log(info(`The result returned when job failed is:`));
+                    console.log(JSON.stringify(result, null, "  "));
+                    addContext(self, {
+                        title: 'Cost time',
+                        value: `Job ends with Failed in ${maxTime - endTime} ms`
+                    });
+                    addContext(self, {
+                        title: 'Final result',
+                        value: result
+                    });
+                    assert.ok(result.state === 'Failed', `pingpong diagnostic failed in ${maxTime - endTime} ms.`);
+                    console.timeEnd(info("diag job-pingpong result duration"));
+                    done();
+                    return false;
+                }
+
+                if (endTime >= maxTime) {
+                    console.log(info(`The result returned when job timeout is:`));
+                    console.log(JSON.stringify(result, null, "  "));
+                    addContext(self, {
+                        title: 'Cost time',
+                        value: `Test ends with timeout in ${maxTime - endTime} ms`
+                    });
+                    addContext(self, {
+                        title: 'Job result when timeout',
+                        value: result
+                    });
+                    try {
+                        assert.fail(`actual runtime ${maxTime - endTime} ms`, "expected time " + timeout + ' ms', `The pingpong diag test doesn't finished in expected time, time elapses:  ${maxTime - endTime} ms`, `the max time is ${timeout} ms`);
+                    } catch (error) {
+                        handleError(error, self);
+                        done(error);
+                        console.timeEnd(info("diag job-pingpong result duration"));
+                    }
+                    return false;
+                }
+                return true;
+            }
+        },
+        interval
+    );
 })
 
 it('should get aggregation result with a specified job id', function (done) {
     let self = this;
     console.log(title('\nshould get aggregation result with a specified job id:'));
     addContext(self, `To get aggregationResult of job ${pingpongJobId}`);
-    console.time(info("duration"));
+    console.time(info("diag job-aggregation result duration"));
     if (pingpongJobState == "Finished") {
         diagApi.get(`/${pingpongJobId}/aggregationresult`)
             .set('Accept', 'application/json')
+            .timeout(perCallCost)
             .expect(200)
             .expect(function (res) {
                 console.log(info(`Diag job ${pingpongJobId}'s aggregation result is:`));
@@ -363,17 +379,18 @@ it('should get aggregation result with a specified job id', function (done) {
                 assert.isNotEmpty(res.body);
             })
             .end(function (err, res) {
-                console.timeEnd(info("duration"));
                 if (err) {
                     handleError(err, self);
                     return done(err);
                 }
                 done();
+                console.timeEnd(info("diag job-aggregation result duration"));
             })
     }
     else {
         diagApi.get(`/${pingpongJobId}/aggregationresult`)
             .set('Accept', 'application/json')
+            .timeout(perCallCost)
             .expect(404)
             .expect(function (res) {
                 console.log(info(`Diag job ${pingpongJobId}'s aggregation result is:`));
@@ -385,12 +402,12 @@ it('should get aggregation result with a specified job id', function (done) {
                 assert.isNotEmpty(res.body);
             })
             .end((err, res) => {
-                console.timeEnd(info("duration"));
                 if (err) {
                     handleError(err, self);
                     return done(err);
                 }
                 done();
+                console.timeEnd(info("diag job-aggregation result duration"));
             })
     }
 
@@ -399,9 +416,10 @@ it('should get aggregation result with a specified job id', function (done) {
 it('should create a new ring diag test', function (done) {
     console.log(title("\nshould create a new ring diag test:"));
     let self = this;
-    console.time(info("duration"));
+    console.time(info("diag job-new ring duration"));
     diagApi.post('')
         .set('Accept', 'application/json')
+        .timeout(perCallCost)
         .send({
             name: 'BVT-ring-test' + getTime(),
             targetNodes: nodes,
@@ -420,12 +438,12 @@ it('should create a new ring diag test', function (done) {
             ringJobId = locationData[locationData.length - 1];
         })
         .end((err, res) => {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
             }
             done();
+            console.timeEnd(info("diag job-new ring duration"));
         });
 })
 
@@ -433,9 +451,10 @@ it('should cancel a diag test', function (done) {
     console.log(title("\nshould cancel diag test:"));
     console.log(info("The job id to cancel is ") + ringJobId);
     let self = this;
-    console.time(info("duration"));
+    console.time(info("diag job-cancel diag duration"));
     diagApi.patch(`/${ringJobId}`)
         .set('Accept', 'application/json')
+        .timeout(perCallCost)
         .send({
             request: 'cancel'
         })
@@ -449,11 +468,11 @@ it('should cancel a diag test', function (done) {
             });
         })
         .end(function (err, res) {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
             }
             done();
+            console.timeEnd(info("diag job-cancel diag duration"));
         })
 })

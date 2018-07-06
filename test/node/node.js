@@ -7,6 +7,7 @@ var expect = common.expect,
     assert = common.assert,
     supertest = common.supertest,
     handleError = common.handleError,
+    perCallCost = common.perCallCost,
     nodeBaseUrl = `${URL}/nodes`,
     nodeApi = supertest(nodeBaseUrl);
 
@@ -16,8 +17,11 @@ let nodeId = -1;
 
 before(function (done) {
     if (URL == '') {
-        assert.fail('Should have base url', '', 'The test stopped by could not get base url, please confirm if you have passed one to run bvt.');
-        return done(err);
+        try {
+            assert.fail('Should have base url', '', 'The test stopped by could not get base url, please confirm if you have passed one to run bvt.');
+        } catch (error) {
+            return done(error);
+        }
     }
     done();
 })
@@ -25,9 +29,10 @@ before(function (done) {
 it('should return nodes list', function (done) {
     console.log(title(`\nshould return nodes list:`));
     let self = this;
-    console.time(info("duration"));
+    console.time(info("node-list duration"));
     nodeApi.get('')
         .set('Accept', 'application/json')
+        .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
             console.log(info("The result body length returned from node api: ") + res.body.length);
@@ -38,24 +43,24 @@ it('should return nodes list', function (done) {
             assert.isNotEmpty(res.body);
             expect(res.body).to.be.an.instanceof(Array);
             nodeId = res.body[0]['id'];
-
         })
         .end(function (err, res) {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
             }
             done();
+            console.timeEnd(info("node-list duration"));
         })
 })
 
 it('should return corresponding detail info with specified node id', function (done) {
     console.log(title(`\nshould return corresponding detail node info with specified id:`));
     let self = this;
-    console.time(info("duration"));
+    console.time(info("node-detail info duration"));
     nodeApi.get(`/${nodeId}`)
         .set('Accept', 'application/json')
+        .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
             console.log(info(`The detail info of node ${nodeId}:`));
@@ -71,21 +76,22 @@ it('should return corresponding detail info with specified node id', function (d
             })
         })
         .end(function (err, res) {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
             }
             done();
+            console.timeEnd(info("node-detail info duration"));
         })
 })
 
 it('should return node event with specified node id', function (done) {
     console.log(title('\nshould return node event with specified id:'));
     let self = this;
-    console.time(info("duration"));
+    console.time(info("node-evnet duration"));
     nodeApi.get(`/${nodeId}/events`)
         .set('Accept', 'application/json')
+        .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
             console.log(info(`The event info of node ${nodeId}:`));
@@ -97,21 +103,22 @@ it('should return node event with specified node id', function (done) {
             })
         })
         .end(function (err, res) {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
             }
             done();
+            console.timeEnd(info("node-evnet duration"));
         })
 })
 
 it('should return metadata of a node', function (done) {
     console.log(title(`\nshould return metadata of a node:`));
     let self = this;
-    console.time(info("duration"));
+    console.time(info("node-metadata duration"));
     nodeApi.get(`/${nodeId}/metadata`)
         .set('Accept', 'application/json')
+        .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
             console.log(info(`The meatadata of node ${nodeId}:`));
@@ -126,21 +133,22 @@ it('should return metadata of a node', function (done) {
             assert.isNotEmpty(network);
         })
         .end(function (err, res) {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
             }
             done();
+            console.timeEnd(info("node-metadata duration"));
         })
 })
 
 it('should return Azure scheduled events of a node', function (done) {
     console.log(title(`\nshould return Azure sheduled events of a node:`));
     let self = this;
-    console.time(info("duration"));
+    console.time(info("node-scheduled event duration"));
     nodeApi.get(`/${nodeId}/scheduledevents`)
         .set('Accept', 'application/json')
+        .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
             console.log(info(`The Azure scheduled events of node ${nodeId}:`));
@@ -153,21 +161,22 @@ it('should return Azure scheduled events of a node', function (done) {
             expect(res.body['Events']).to.be.an.instanceof(Array);
         })
         .end(function (err, res) {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
             }
             done();
+            console.timeEnd(info("node-scheduled event duration"));
         })
 })
 
 it('should return job info with specified node id', function (done) {
     console.log(title('\nshould return job info with specified node id:'));
     let self = this;
-    console.time(info("duration"));
+    console.time(info("node-job info duration"));
     nodeApi.get(`/${nodeId}/jobs`)
         .set('Accept', 'application/json')
+        .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
             console.log(info(`The job info of node ${nodeId} is:`));
@@ -179,21 +188,22 @@ it('should return job info with specified node id', function (done) {
             expect(res.body).to.be.an.instanceOf(Array);
         })
         .end(function (err, res) {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
             }
             done();
+            console.timeEnd(info("node-job info duration"));
         })
 })
 
 it('should return node metric history', function (done) {
     console.log(title(`\nshould return node metric history`));
     let self = this;
-    console.time(info("duration"));
+    console.time(info("node-metric history duration"));
     nodeApi.get(`/${nodeId}/metricHistory`)
         .set('Accept', 'application/json')
+        .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
             let now = getTime();
@@ -210,7 +220,7 @@ it('should return node metric history', function (done) {
             assert.isNotEmpty(result['data']);
         })
         .end(function (err, res) {
-            console.timeEnd(info("duration"));
+            console.timeEnd(info("node-metric history duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);

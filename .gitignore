@@ -5,3 +5,7 @@
 /mochawesome-report
 
 /test/testLoop.js
+
+/coverage
+
+/.nyc_output

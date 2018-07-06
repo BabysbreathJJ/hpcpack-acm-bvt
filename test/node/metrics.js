@@ -7,6 +7,7 @@ var expect = common.expect,
     assert = common.assert,
     supertest = common.supertest,
     handleError = common.handleError,
+    perCallCost = common.perCallCost,
     metricsBaseUrl = `${URL}/metrics`,
     metircsApi = supertest(metricsBaseUrl);
 
@@ -14,8 +15,11 @@ let category = "";
 
 before(function (done) {
     if (URL == '') {
-        assert.fail('Should have base url', '', 'The test stopped by could not get base url, please confirm if you have passed one to run bvt.');
-        return done(err);
+        try {
+            assert.fail('Should have base url', '', 'The test stopped by could not get base url, please confirm if you have passed one to run bvt.');
+        } catch (error) {
+            return done(error);
+        }
     }
     done();
 })
@@ -23,9 +27,10 @@ before(function (done) {
 it('should return metrics categories', function (done) {
     console.log(title(`\nshould return metrics categories:`));
     let self = this;
-    console.time(info("duration"));
+    console.time(info("node-metric category duration"));
     metircsApi.get(`/categories`)
         .set('Accept', 'application/json')
+        .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
             console.log(info(`Metircs categories:`));
@@ -40,21 +45,22 @@ it('should return metrics categories', function (done) {
             category = res.body[0];
         })
         .end(function (err, res) {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
             }
             done();
+            console.timeEnd(info("node-metric category duration"));
         })
 })
 
 it('should return metric info of a node', function (done) {
     console.log(title(`\nshould return metric info of a node`));
     let self = this;
-    console.time(info("duration"));
+    console.time(info("node-mertic info duration"));
     metircsApi.get(`/${category}`)
         .set('Accept', 'application/json')
+        .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
             console.log(info(`${category} info of nodes:`));
@@ -68,11 +74,11 @@ it('should return metric info of a node', function (done) {
             assert.isNotEmpty(res.body['values']);
         })
         .end(function (err, res) {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
             }
             done();
+            console.timeEnd(info("node-mertic info duration"));
         })
 })

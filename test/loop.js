@@ -1,31 +1,31 @@
 const request = require("request");
+
 module.exports = class Loop {
-    static start(url, observer, interval = 1500) {
+    static start(url, timeout, observer, interval = 1500) {
         let looper = { url: url, ended: false };
+        console.log(`The timeout is ${timeout}`);
 
         let _loop = () => {
             if (looper.ended) {
                 return;
             }
             let ts = new Date().getTime();
-            request(url, function (error, reponse) {
-                if (error !== null) {
-                    looper.ended = true;
-                    if (observer.error) {
-                        observer.error(err);
-                    }
-                }
+            request(url, { timeout: timeout }, function (error, response) {
                 if (looper.ended) {
                     return;
                 }
+                let retry = false;
+                if (error && error.code === 'ETIMEDOUT') {
+                    retry = true;
+                }
                 let elapse = new Date().getTime() - ts;
-                let n = observer.next(reponse, error);
-                if (!n) {
+                let cont = observer.next(response, error);
+                if (!cont) {
                     looper.ended = true;
                     return;
                 }
                 let delta = interval - elapse;
-                let _interval = delta > 0 ? delta : 0;
+                let _interval = ((delta < 0) || retry) ? 0 : delta;
                 setTimeout(_loop, _interval);
             }
             );

@@ -32,14 +32,18 @@ before(function (done) {
     });
 
     if (URL == '') {
-        assert.fail('Should have base url', '', 'The test stopped by could not get base url, please confirm if you have passed one to run bvt.');
-        return done(err);
+        try {
+            assert.fail('Should have base url', '', 'The test stopped by could not get base url, please confirm if you have passed one to run bvt.');
+        } catch (error) {
+            return done(error);
+        }
     }
 
     let self = this;
-    console.time(info("duration"));
+    console.time(info("clusrun task-before all hook get job list duration"));
     clusrunApi.get(`?lastid=${maxNum}&count=${jobNum}&reverse=true`)
         .set('Accept', 'application/json')
+        .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
             console.log(info("The result body length returned from diag list api: ") + res.body.length);
@@ -66,12 +70,12 @@ before(function (done) {
             });
         })
         .end(function (err, res) {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
             }
             done();
+            console.timeEnd(info("clusrun task-before all hook get job list duration"));
         })
 })
 
@@ -80,9 +84,10 @@ it('should return task list with a specified job id', function (done) {
     console.log(info("Job id is: ") + jobId);
     addContext(this, `Job id is ${jobId}`);
     let self = this;
-    console.time(info("duration"));
+    console.time(info("clusrun-task list duration"));
     clusrunApi.get(`/${jobId}/tasks`)
         .set('Accept', 'application/json')
+        .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
             result = res.body;
@@ -104,12 +109,12 @@ it('should return task list with a specified job id', function (done) {
             });
         })
         .end(function (err, res) {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
             }
             done();
+            console.timeEnd(info("clusrun-task list duration"));
         })
 })
 
@@ -121,9 +126,10 @@ it('should get detailed task info with a specified task id', function (done) {
     addContext(this, `Task id is ${taskId}`);
     expect(taskId).to.be.a('number');
     let self = this;
-    console.time(info("duration"));
+    console.time(info("clusrun task-detailed task info duration"));
     clusrunApi.get(`/${jobId}/tasks/${taskId}`)
         .set('Accpet', 'application/json')
+        .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
             assert.isNotEmpty(res.body);
@@ -138,12 +144,12 @@ it('should get detailed task info with a specified task id', function (done) {
             expect(taskInfo).to.have.property('state');
         })
         .end(function (err, res) {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
             }
             done();
+            console.timeEnd(info("clusrun task-detailed task info duration"));
         });
 })
 
@@ -155,9 +161,10 @@ it('should get a task result with a specified task id', function (done) {
     addContext(this, `Task id is ${taskId}`);
     expect(taskId).to.be.a('number');
     let self = this;
-    console.time(info("duration"));
+    console.time(info("clusrun task-task result duration"));
     clusrunApi.get(`/${jobId}/tasks/${taskId}/result`)
         .set('Accept', 'application/json')
+        .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
             assert.isNotEmpty(res.body);
@@ -174,12 +181,12 @@ it('should get a task result with a specified task id', function (done) {
             resultKey = taskRes['resultKey'];
         })
         .end(function (err, res) {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
             }
             done();
+            console.timeEnd(info("clusrun task-task result duration"));
         });
 })
 
@@ -191,9 +198,10 @@ it('should get the whole output of a task', function (done) {
     addContext(this, `Task id is ${taskId}`);
     expect(taskId).to.be.a('number');
     let self = this;
-    console.time(info("duration"));
+    console.time(info("clusrun task-whole output duration"));
     outputApi.get(`/${resultKey}/raw`)
         .set('Accept', 'application/json')
+        .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
             console.log(info(`task ${taskId} whole output:`));
@@ -204,12 +212,12 @@ it('should get the whole output of a task', function (done) {
             });
         })
         .end(function (err, res) {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
             }
             done();
+            console.timeEnd(info("clusrun task-whole output duration"));
         });
 
 })
@@ -224,9 +232,10 @@ it('should get partial output of a task', function (done) {
     addContext(this, `Task id is ${taskId}`);
 
     let self = this;
-    console.time(info("duration"));
+    console.time(info("clusrun task-partial output duration"));
     outputApi.get(`/${resultKey}/page?offset=${outputInitOffset}&pageSize=${outputPageSize}`)
         .set('Accept', 'application/json')
+        .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
             assert.isNotEmpty(res.body);
@@ -241,11 +250,11 @@ it('should get partial output of a task', function (done) {
             expect(result).to.have.property('size');
         })
         .end(function (err, res) {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(er);
             }
             done();
+            console.timeEnd(info("clusrun task-partial output duration"));
         });
 })

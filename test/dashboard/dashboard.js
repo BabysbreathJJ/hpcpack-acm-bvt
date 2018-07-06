@@ -9,14 +9,18 @@ var expect = common.expect,
     supertest = common.supertest,
     handleError = common.handleError,
     dashboardBaseUrl = `${URL}/dashboard`,
-    dashboardApi = supertest(dashboardBaseUrl);
+    dashboardApi = supertest(dashboardBaseUrl),
+    perCallCost = common.perCallCost;
 
 let timeout = 1000 * 60;//set timeout as 1 minute
 
 before(function (done) {
     if (URL == '') {
-        assert.fail('Should have base url', '', 'The test stopped by could not get base url, please confirm if you have passed one to run bvt.');
-        return done(err);
+        try {
+            assert.fail('Should have base url', '', 'The test stopped by could not get base url, please confirm if you have passed one to run bvt.');
+        } catch (error) {
+            return done(error);
+        }
     }
     done();
 })
@@ -24,15 +28,17 @@ before(function (done) {
 it('should return nodes state info', function (done) {
     console.log(title('\nshould return nodes state info'));
     let self = this;
-    console.time(info("duration"));
+    console.time(info("dashboard-nodes state duration"));
     dashboardApi.get('/nodes')
         .set('Accept', 'application/json')
+        .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
             console.log(info("The result body returned by nodes api is"));
             console.log(JSON.stringify(res.body, null, "  "));
             assert.isNotEmpty(res.body);
-            let result = res.body;
+            expect(res.body).to.have.property('data');
+            let result = res.body.data;
             expect(result).to.have.property('OK');
             expect(result).to.have.property('Warning');
             expect(result).to.have.property('Error');
@@ -40,35 +46,36 @@ it('should return nodes state info', function (done) {
             assert.isNumber(result['Warning'], 'The number of Warning node');
             assert.isNumber(result['Error'], 'The number of Error node');
             addContext(self, {
-                title: `dashboard nodes state info`,
-                value: result
+                title: `dashboard-nodes state info`,
+                value: res.body
             });
         })
         .end(function (err, res) {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
             }
             done();
+            console.timeEnd(info("dashboard-nodes state duration"));
         })
 })
 
 it('should return statistic of diagnostic jobs by state', function (done) {
     console.log(title("\nshould return statistic of diagnostic jobs by state"));
-    this.timeout(timeout);
     console.log(info(`Timeout for diagnostic jobs state info: ${timeout} ms`));
     addContext(this, `Timeout for dashboard diagnostic jobs state info is ${timeout} ms`);
     let self = this;
-    console.time(info("duration"));
+    console.time(info("dashboard-diag jobs duration"));
     dashboardApi.get('/diagnostics')
         .set('Accept', 'application/json')
+        .timeout(timeout)
         .expect(200)
         .expect(function (res) {
             console.log(info("The result body returned by diagnostic api is"));
             console.log(JSON.stringify(res.body, null, "  "));
             assert.isNotEmpty(res.body);
-            let result = res.body;
+            expect(res.body).to.have.property('data');
+            let result = res.body.data;
             expect(result).to.have.property('Queued');
             expect(result).to.have.property('Running');
             expect(result).to.have.property('Finished');
@@ -84,34 +91,35 @@ it('should return statistic of diagnostic jobs by state', function (done) {
             assert.isNumber(result['Failed'], 'The number of Failed diagnostic job');
             addContext(self, {
                 title: `dashboard diagnostic job info`,
-                value: result
+                value: res.body
             });
         })
         .end((err, res) => {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
             }
             done();
+            console.timeEnd(info("dashboard-diag jobs duration"));
         })
 })
 
 it('should return statistic of clusrun jobs by state', function (done) {
     console.log(title("\nshould return statistic of clusrun jobs by state"));
-    this.timeout(timeout);
     console.log(info(`Timeout for clusrun jobs state info: ${timeout} ms`));
     addContext(this, `Timeout for dashboard clusrun jobs state info is ${timeout} ms`);
     let self = this;
-    console.time(info("duration"));
+    console.time(info("dashboard-clusurn jobs duration"));
     dashboardApi.get('/clusrun')
         .set('Accept', 'application/json')
+        .timeout(timeout)
         .expect(200)
         .expect(function (res) {
             console.log(info("The result body returned by clusrun api is"));
             console.log(JSON.stringify(res.body, null, "  "));
             assert.isNotEmpty(res.body);
-            let result = res.body;
+            expect(res.body).to.have.property('data');
+            let result = res.body.data;
             expect(result).to.have.property('Queued');
             expect(result).to.have.property('Running');
             expect(result).to.have.property('Finished');
@@ -127,15 +135,15 @@ it('should return statistic of clusrun jobs by state', function (done) {
             assert.isNumber(result['Failed'], 'The number of Failed diagnostic job');
             addContext(self, {
                 title: `dashboard clusrun job info`,
-                value: result
+                value: res.body
             });
         })
         .end((err, res) => {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
             }
             done();
+            console.timeEnd(info("dashboard-clusurn jobs duration"));
         })
 })

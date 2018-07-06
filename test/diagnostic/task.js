@@ -8,6 +8,7 @@ var handleError = common.handleError;
 var expect = common.expect,
     assert = common.assert,
     supertest = common.supertest,
+    perCallCost = common.perCallCost,
     diagBaseUrl = `${URL}/diagnostics`,
     diagApi = supertest(diagBaseUrl),
     perCallCost = common.perCallCost;
@@ -26,14 +27,18 @@ before(function (done) {
     });
 
     if (URL == '') {
-        assert.fail('Should have base url', '', 'The test stopped by could not get base url, please confirm if you have passed one to run bvt.');
-        return done(err);
+        try {
+            assert.fail('Should have base url', '', 'The test stopped by could not get base url, please confirm if you have passed one to run bvt.');
+        } catch (error) {
+            return done(error);
+        }
     }
 
     let self = this;
-    console.time(info("duration"));
+    console.time(info("diag task-before all hook diga list duration"));
     diagApi.get(`?lastid=0&count=${jobNum}&reverse=true`)
         .set('Accept', 'application/json')
+        .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
             console.log(info("The result body length returned from diag list api: ") + res.body.length);
@@ -59,12 +64,12 @@ before(function (done) {
             });
         })
         .end(function (err, res) {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
             }
             done();
+            console.timeEnd(info("diag task-before all hook diga list duration"));
         })
 })
 
@@ -73,9 +78,10 @@ it('should return task list with a specified job id', function (done) {
     console.log(info("Job id is: ") + jobId);
     addContext(this, `Job id is ${jobId}`);
     let self = this;
-    console.time(info("duration"));
+    console.time(info("diag task-task list of a job duration"));
     diagApi.get(`/${jobId}/tasks`)
         .set('Accept', 'application/json')
+        .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
             result = res.body;
@@ -97,12 +103,12 @@ it('should return task list with a specified job id', function (done) {
             });
         })
         .end(function (err, res) {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
             }
             done();
+            console.timeEnd(info("diag task-task list of a job duration"));
         })
 })
 
@@ -114,9 +120,10 @@ it('should get detailed task info with a specified task id', function (done) {
     addContext(this, `Task id is ${taskId}`);
     expect(taskId).to.be.a('number');
     let self = this;
-    console.time(info("duration"));
+    console.time(info("diag task-task info duration"));
     diagApi.get(`/${jobId}/tasks/${taskId}`)
         .set('Accpet', 'application/json')
+        .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
             assert.isNotEmpty(res.body);
@@ -131,12 +138,12 @@ it('should get detailed task info with a specified task id', function (done) {
             expect(taskInfo).to.have.property('state');
         })
         .end(function (err, res) {
-            console.timeEnd(info("duration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
             }
             done();
+            console.timeEnd(info("diag task-task info duration"));
         });
 })
 
@@ -148,9 +155,10 @@ it('should get a task result with a specified task id', function (done) {
     addContext(this, `Task id is ${taskId}`);
     expect(taskId).to.be.a('number');
     let self = this;
-    console.time(info("duration"));
+    console.time(info("diag task-task result uration"));
     diagApi.get(`/${jobId}/tasks/${taskId}/result`)
         .set('Accept', 'application/json')
+        .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
             assert.isNotEmpty(res.body);
@@ -166,7 +174,7 @@ it('should get a task result with a specified task id', function (done) {
             expect(taskRes).to.have.property('resultKey');
         })
         .end(function (err, res) {
-            console.timeEnd(info("duration"));
+            console.timeEnd(info("diag task-task result uration"));
             if (err) {
                 handleError(err, self);
                 return done(err);
