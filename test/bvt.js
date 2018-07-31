@@ -11,6 +11,7 @@ function importTest(name, path) {
 
 describe("hpc-acm-bvt", function () {
     importTest('Dashboard', './dashboard/dashboard');
+    importTest('Node-list', './node/node-list');
     importTest('Node', './node/node');
     importTest('Metrics', './node/metrics');
     importTest('Diag-job', './diagnostic/job');

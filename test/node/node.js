@@ -14,6 +14,7 @@ var expect = common.expect,
 var getTime = common.getTime;
 
 let nodeId = -1;
+let runningJobCount = 0;
 
 before(function (done) {
     if (URL == '') {
@@ -23,10 +24,6 @@ before(function (done) {
             return done(error);
         }
     }
-    done();
-})
-
-it('should return nodes list', function (done) {
     console.log(title(`\nshould return nodes list:`));
     let self = this;
     console.time(info("node-list duration"));
@@ -43,6 +40,7 @@ it('should return nodes list', function (done) {
             assert.isNotEmpty(res.body);
             expect(res.body).to.be.an.instanceof(Array);
             nodeId = res.body[0]['id'];
+            runningJobCount = res.body[0]['runningJobCount'];
         })
         .end(function (err, res) {
             if (err) {
@@ -186,6 +184,7 @@ it('should return job info with specified node id', function (done) {
                 value: res.body
             });
             expect(res.body).to.be.an.instanceOf(Array);
+            expect(res.body.length).to.equal(runningJobCount);
         })
         .end(function (err, res) {
             if (err) {

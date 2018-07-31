@@ -252,7 +252,7 @@ it('should get partial output of a task', function (done) {
         .end(function (err, res) {
             if (err) {
                 handleError(err, self);
-                return done(er);
+                return done(err);
             }
             done();
             console.timeEnd(info("clusrun task-partial output duration"));
