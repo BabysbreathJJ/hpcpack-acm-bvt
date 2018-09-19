@@ -9,7 +9,8 @@ var expect = common.expect,
     handleError = common.handleError,
     perCallCost = common.perCallCost,
     nodeBaseUrl = `${URL}/nodes`,
-    nodeApi = supertest(nodeBaseUrl);
+    nodeApi = supertest(nodeBaseUrl),
+    authorization = common.authorization;
 
 before(function (done) {
     if (URL == '') {
@@ -28,6 +29,7 @@ it('should return nodes list', function (done) {
     console.time(info("node-list duration"));
     nodeApi.get('')
         .set('Accept', 'application/json')
+        .set('Authorization', authorization)
         .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {

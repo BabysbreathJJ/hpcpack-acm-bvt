@@ -1,6 +1,6 @@
 var URL = process.env.URL ? process.env.URL : '';
-// var URL = 'http://evanclinuxdev1.eastasia.cloudapp.azure.com:8080/v1';
-// var URL = 'http://frontend.westus.azurecontainer.io/v1';
+// var URL = 'https://hpcacm.eastus.azurecontainer.io/v1';
+process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0;
 const addContext = require('mochawesome/addContext');
 const chalk = require('chalk');
 const error = chalk.bold.red;
@@ -17,6 +17,7 @@ supertest = require('supertest'),
     Loop = require('./loop.js');
 
 const perCallCost = 10000;
+const authorization = Buffer.from('root:Pass1word').toString('base64');
 
 console.log(info("The base url of rest api is: ") + `${URL}`);
 
@@ -34,6 +35,7 @@ function getTime() {
     let second = formateDateValue(date.getSeconds());
     return `@${year}-${month}-${day} ${hour}:${minute}:${second}`;
 }
+
 function handleError(err, self) {
     console.log(error(err));
     addContext(self, {
@@ -56,5 +58,6 @@ module.exports = {
     assert: assert,
     supertest: supertest,
     Loop: Loop,
-    perCallCost: perCallCost
+    perCallCost: perCallCost,
+    authorization: `Basic ${authorization}`
 }

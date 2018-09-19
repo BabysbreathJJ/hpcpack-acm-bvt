@@ -11,7 +11,8 @@ var expect = common.expect,
     api = supertest(`${URL}`),
     diagApi = supertest(diagBaseUrl),
     Loop = common.Loop,
-    perCallCost = common.perCallCost;
+    perCallCost = common.perCallCost,
+    authorization = common.authorization;
 
 var getTime = common.getTime;
 var handleError = common.handleError;
@@ -44,6 +45,7 @@ before(function (done) {
     console.time(info("diag job-before all hook get nodes duration"));
     api.get('/nodes')
         .set('Accept', 'application/json')
+        .set('Authorization', authorization)
         .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
@@ -92,6 +94,7 @@ it('should return diag tests list', function (done) {
     console.time(info("diag job-tests duration"));
     diagApi.get('/tests')
         .set('Accept', 'application/json')
+        .set('Authorization', authorization)
         .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
@@ -140,6 +143,7 @@ it('should return 400 Bad Request when create a new diag with empty diagnosticTe
     console.time(info("diag job-400 empty diganosticTest duration"));
     diagApi.post('')
         .set('Accept', 'application/json')
+        .set('Authorization', authorization)
         .timeout(perCallCost)
         .send({
             name: 'BVT-empty-diag-test' + getTime(),
@@ -172,6 +176,7 @@ it('should return 400 Bad Request when create a new with empty targetNodes', fun
     console.time(info("diag job- 400 empty targetNodes duration"));
     diagApi.post('')
         .set('Accept', 'application/json')
+        .set('Authorization', authorization)
         .timeout(perCallCost)
         .send({
             name: 'BVT-empty-diag-test' + getTime(),
@@ -204,6 +209,7 @@ it('should create a new pingpong diag test', function (done) {
     console.time(info("diag job-create a new pingpong duration"));
     diagApi.post('')
         .set('Accept', 'application/json')
+        .set('Authorization', authorization)
         .timeout(perCallCost)
         .send({
             name: 'BVT-pingpong-test' + getTime(),
@@ -238,6 +244,7 @@ it('should return detailed info with a specified diag job id', function (done) {
     console.time(info("diag job-detialed job info duration"));
     diagApi.get(`/${pingpongJobId}`)
         .set('Accept', 'application/json')
+        .set('Authorization', authorization)
         .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
@@ -274,8 +281,7 @@ it('should get a pinpong diag test result before timeout', function (done) {
     console.time(info("diag job-pingpong result duration"));
     let loop = Loop.start(
         diagBaseUrl + '/' + pingpongJobId,
-        perCallCost,
-        {
+        perCallCost, {
             next: function (res, err) {
                 let endTime = new Date().getTime();
                 if (err) {
@@ -313,8 +319,7 @@ it('should get a pinpong diag test result before timeout', function (done) {
                     console.timeEnd(info("diag job-pingpong result duration"));
                     done();
                     return false;
-                }
-                else if (result.state == 'Failed') {
+                } else if (result.state == 'Failed') {
                     console.log(info(`Job ends with Failed in ${maxTime - endTime} ms`));
                     console.log(info(`The result returned when job failed is:`));
                     console.log(JSON.stringify(result, null, "  "));
@@ -327,6 +332,22 @@ it('should get a pinpong diag test result before timeout', function (done) {
                         value: result
                     });
                     assert.ok(result.state === 'Failed', `pingpong diagnostic failed in ${maxTime - endTime} ms.`);
+                    console.timeEnd(info("diag job-pingpong result duration"));
+                    done();
+                    return false;
+                } else if (result.state == 'Canceled') {
+                    console.log(info(`Job ends with Canceled in ${maxTime - endTime} ms`));
+                    console.log(info(`The result returned when job canceled is:`));
+                    console.log(JSON.stringify(result, null, "  "));
+                    addContext(self, {
+                        title: 'Cost time',
+                        value: `Job ends with Canceled in ${maxTime - endTime} ms`
+                    });
+                    addContext(self, {
+                        title: 'Final result',
+                        value: result
+                    });
+                    assert.ok(result.state === 'Canceled', `pingpong diagnostic canceled in ${maxTime - endTime} ms.`);
                     console.timeEnd(info("diag job-pingpong result duration"));
                     done();
                     return false;
@@ -367,6 +388,7 @@ it('should get aggregation result with a specified job id', function (done) {
     if (pingpongJobState == "Finished") {
         diagApi.get(`/${pingpongJobId}/aggregationresult`)
             .set('Accept', 'application/json')
+            .set('Authorization', authorization)
             .timeout(perCallCost)
             .expect(200)
             .expect(function (res) {
@@ -386,10 +408,10 @@ it('should get aggregation result with a specified job id', function (done) {
                 done();
                 console.timeEnd(info("diag job-aggregation result duration"));
             })
-    }
-    else {
+    } else {
         diagApi.get(`/${pingpongJobId}/aggregationresult`)
             .set('Accept', 'application/json')
+            .set('Authorization', authorization)
             .timeout(perCallCost)
             .expect(404)
             .expect(function (res) {
@@ -419,6 +441,7 @@ it('should create a new ring diag test', function (done) {
     console.time(info("diag job-new ring duration"));
     diagApi.post('')
         .set('Accept', 'application/json')
+        .set('Authorization', authorization)
         .timeout(perCallCost)
         .send({
             name: 'BVT-ring-test' + getTime(),
@@ -454,6 +477,7 @@ it('should cancel a diag test', function (done) {
     console.time(info("diag job-cancel diag duration"));
     diagApi.patch(`/${ringJobId}`)
         .set('Accept', 'application/json')
+        .set('Authorization', authorization)
         .timeout(perCallCost)
         .send({
             request: 'cancel'

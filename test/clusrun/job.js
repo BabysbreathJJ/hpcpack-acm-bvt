@@ -9,7 +9,8 @@ var expect = common.expect,
     clusrunBaseUrl = `${URL}/clusrun`,
     api = supertest(`${URL}`),
     clusrunApi = supertest(clusrunBaseUrl),
-    perCallCost = common.perCallCost;
+    perCallCost = common.perCallCost,
+    authorization = common.authorization;
 
 var handleError = common.handleError;
 
@@ -36,6 +37,7 @@ before(function (done) {
     console.time(info("clusrun job-before all hook get nodes duration"));
     api.get('/nodes')
         .set('Accept', 'application/json')
+        .set('Authorization', authorization)
         .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
@@ -85,6 +87,7 @@ it('should return 400 Bad Request when create a new clusrun without commandline 
     console.time(info("clusrun-400 without commandline property duration"));
     clusrunApi.post('')
         .set('Accept', 'application/json')
+        .set('Authorization', authorization)
         .timeout(perCallCost)
         .send({
             targetNodes: nodes
@@ -114,6 +117,7 @@ it('should return 400 Bad Request when create a new clusrun without targetNodes 
     console.time(info("clusrun-400 without target nodes duration"));
     clusrunApi.post('')
         .set('Accept', 'application/json')
+        .set('Authorization', authorization)
         .timeout(perCallCost)
         .send({
             commandLine: "whoami"
@@ -143,6 +147,7 @@ it('should create a new clusrun job', function (done) {
     console.time(info("clusrun-create a new clusrun duration"));
     clusrunApi.post('')
         .set('Accept', 'application/json')
+        .set('Authorization', authorization)
         .timeout(perCallCost)
         .send({
             commandLine: "whoami",
@@ -175,6 +180,7 @@ it('should cancel a clusrun job', function (done) {
     console.time(info("clusurn-cancel a clusrun duration"));
     clusrunApi.patch(`/${clusrunJobId}`)
         .set('Accept', 'application/json')
+        .set('Authorization', authorization)
         .timeout(perCallCost)
         .send({
             request: 'cancel'
@@ -204,6 +210,7 @@ it('should return detailed info with a specified clusrun job id', function (done
     console.time(info("clusrun-job detailed info duration"));
     clusrunApi.get(`/${clusrunJobId}`)
         .set('Accept', 'application/json')
+        .set('Authorization', authorization)
         .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {

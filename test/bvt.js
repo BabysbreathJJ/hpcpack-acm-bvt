@@ -1,5 +1,16 @@
 var common = require('./common');
 const maxTimeout = 1000 * 60 * 60 * 24;
+var URL = common.URL;
+const addContext = common.addContext;
+const info = common.info;
+const title = common.title;
+var expect = common.expect,
+    assert = common.assert,
+    supertest = common.supertest,
+    handleError = common.handleError,
+    perCallCost = common.perCallCost,
+    authorization = common.authorization;
+
 function importTest(name, path) {
     describe(name, function () {
         this.timeout(maxTimeout);
@@ -10,6 +21,7 @@ function importTest(name, path) {
 
 
 describe("hpc-acm-bvt", function () {
+    importTest('Validation', './user/validation')
     importTest('Dashboard', './dashboard/dashboard');
     importTest('Node-list', './node/node-list');
     importTest('Node', './node/node');

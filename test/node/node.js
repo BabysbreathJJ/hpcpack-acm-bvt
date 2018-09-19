@@ -9,7 +9,9 @@ var expect = common.expect,
     handleError = common.handleError,
     perCallCost = common.perCallCost,
     nodeBaseUrl = `${URL}/nodes`,
-    nodeApi = supertest(nodeBaseUrl);
+    nodeApi = supertest.agent(nodeBaseUrl),
+    validationApi = supertest.agent(`${URL}/validation`),
+    authorization = common.authorization;
 
 var getTime = common.getTime;
 
@@ -29,6 +31,7 @@ before(function (done) {
     console.time(info("node-list duration"));
     nodeApi.get('')
         .set('Accept', 'application/json')
+        .set('Authorization', authorization)
         .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
@@ -52,12 +55,16 @@ before(function (done) {
         })
 })
 
+
 it('should return corresponding detail info with specified node id', function (done) {
     console.log(title(`\nshould return corresponding detail node info with specified id:`));
     let self = this;
+    addContext(this, `Specified node id is ${nodeId}`);
+    console.log(info(`Specified node id is ${nodeId}`));
     console.time(info("node-detail info duration"));
     nodeApi.get(`/${nodeId}`)
         .set('Accept', 'application/json')
+        .set('Authorization', authorization)
         .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
@@ -86,9 +93,12 @@ it('should return corresponding detail info with specified node id', function (d
 it('should return node event with specified node id', function (done) {
     console.log(title('\nshould return node event with specified id:'));
     let self = this;
+    addContext(this, `Specified node id is ${nodeId}`);
+    console.log(info(`Specified node id is ${nodeId}`));
     console.time(info("node-evnet duration"));
     nodeApi.get(`/${nodeId}/events`)
         .set('Accept', 'application/json')
+        .set('Authorization', authorization)
         .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
@@ -113,9 +123,12 @@ it('should return node event with specified node id', function (done) {
 it('should return metadata of a node', function (done) {
     console.log(title(`\nshould return metadata of a node:`));
     let self = this;
+    addContext(this, `Specified node id is ${nodeId}`);
+    console.log(info(`Specified node id is ${nodeId}`));
     console.time(info("node-metadata duration"));
     nodeApi.get(`/${nodeId}/metadata`)
         .set('Accept', 'application/json')
+        .set('Authorization', authorization)
         .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
@@ -143,9 +156,12 @@ it('should return metadata of a node', function (done) {
 it('should return Azure scheduled events of a node', function (done) {
     console.log(title(`\nshould return Azure sheduled events of a node:`));
     let self = this;
+    addContext(this, `Specified node id is ${nodeId}`);
+    console.log(info(`Specified node id is ${nodeId}`));
     console.time(info("node-scheduled event duration"));
     nodeApi.get(`/${nodeId}/scheduledevents`)
         .set('Accept', 'application/json')
+        .set('Authorization', authorization)
         .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
@@ -171,9 +187,12 @@ it('should return Azure scheduled events of a node', function (done) {
 it('should return job info with specified node id', function (done) {
     console.log(title('\nshould return job info with specified node id:'));
     let self = this;
+    addContext(this, `Specified node id is ${nodeId}`);
+    console.log(info(`Specified node id is ${nodeId}`));
     console.time(info("node-job info duration"));
     nodeApi.get(`/${nodeId}/jobs`)
         .set('Accept', 'application/json')
+        .set('Authorization', authorization)
         .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
@@ -199,9 +218,12 @@ it('should return job info with specified node id', function (done) {
 it('should return node metric history', function (done) {
     console.log(title(`\nshould return node metric history`));
     let self = this;
+    addContext(this, `Specified node id is ${nodeId}`);
+    console.log(info(`Specified node id is ${nodeId}`));
     console.time(info("node-metric history duration"));
     nodeApi.get(`/${nodeId}/metricHistory`)
         .set('Accept', 'application/json')
+        .set('Authorization', authorization)
         .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
