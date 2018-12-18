@@ -106,7 +106,7 @@ it('should return diag tests list', function (done) {
             console.log(info("The result body length is: ") + res.body.length);
             if (res.body.length > 0) {
                 pingpong = res.body.find((e) => {
-                    return e.name == 'pingpong';
+                    return e.name == 'Pingpong';
                 });
                 addContext(self, {
                     title: 'pingpong test',
@@ -114,7 +114,7 @@ it('should return diag tests list', function (done) {
                 });
                 pingpong['arguments'] = [];
                 ring = res.body.find((e) => {
-                    return e.name == 'ring';
+                    return e.name == 'Ring';
                 });
                 ring['arguments'] = [];
                 addContext(self, {
