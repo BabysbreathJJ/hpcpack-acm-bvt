@@ -11,8 +11,7 @@ var expect = common.expect,
     perCallCost = common.perCallCost,
     diagBaseUrl = `${URL}/diagnostics`,
     diagApi = supertest(diagBaseUrl),
-    perCallCost = common.perCallCost,
-    authorization = common.authorization;
+    perCallCost = common.perCallCost;
 
 
 let jobId = -1;
@@ -39,7 +38,6 @@ before(function (done) {
     console.time(info("diag task-before all hook diga list duration"));
     diagApi.get(`?lastid=0&count=${jobNum}&reverse=true`)
         .set('Accept', 'application/json')
-        .set('Authorization', authorization)
         .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
@@ -83,7 +81,6 @@ it('should return task list with a specified job id', function (done) {
     console.time(info("diag task-task list of a job duration"));
     diagApi.get(`/${jobId}/tasks`)
         .set('Accept', 'application/json')
-        .set('Authorization', authorization)
         .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
@@ -126,7 +123,6 @@ it('should get detailed task info with a specified task id', function (done) {
     console.time(info("diag task-task info duration"));
     diagApi.get(`/${jobId}/tasks/${taskId}`)
         .set('Accpet', 'application/json')
-        .set('Authorization', authorization)
         .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
@@ -162,7 +158,6 @@ it('should get a task result with a specified task id', function (done) {
     console.time(info("diag task-task result uration"));
     diagApi.get(`/${jobId}/tasks/${taskId}/result`)
         .set('Accept', 'application/json')
-        .set('Authorization', authorization)
         .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {

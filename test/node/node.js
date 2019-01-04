@@ -31,7 +31,6 @@ before(function (done) {
     console.time(info("node-list duration"));
     nodeApi.get('')
         .set('Accept', 'application/json')
-        .set('Authorization', authorization)
         .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
@@ -64,7 +63,6 @@ it('should return corresponding detail info with specified node id', function (d
     console.time(info("node-detail info duration"));
     nodeApi.get(`/${nodeId}`)
         .set('Accept', 'application/json')
-        .set('Authorization', authorization)
         .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
@@ -98,7 +96,6 @@ it('should return node event with specified node id', function (done) {
     console.time(info("node-evnet duration"));
     nodeApi.get(`/${nodeId}/events`)
         .set('Accept', 'application/json')
-        .set('Authorization', authorization)
         .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
@@ -128,7 +125,6 @@ it('should return metadata of a node', function (done) {
     console.time(info("node-metadata duration"));
     nodeApi.get(`/${nodeId}/metadata`)
         .set('Accept', 'application/json')
-        .set('Authorization', authorization)
         .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
@@ -161,7 +157,6 @@ it('should return Azure scheduled events of a node', function (done) {
     console.time(info("node-scheduled event duration"));
     nodeApi.get(`/${nodeId}/scheduledevents`)
         .set('Accept', 'application/json')
-        .set('Authorization', authorization)
         .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
@@ -192,7 +187,6 @@ it('should return job info with specified node id', function (done) {
     console.time(info("node-job info duration"));
     nodeApi.get(`/${nodeId}/jobs`)
         .set('Accept', 'application/json')
-        .set('Authorization', authorization)
         .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
@@ -223,7 +217,6 @@ it('should return node metric history', function (done) {
     console.time(info("node-metric history duration"));
     nodeApi.get(`/${nodeId}/metricHistory`)
         .set('Accept', 'application/json')
-        .set('Authorization', authorization)
         .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {

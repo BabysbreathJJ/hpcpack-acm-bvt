@@ -10,10 +10,9 @@ var expect = common.expect,
     handleError = common.handleError,
     dashboardBaseUrl = `${URL}/dashboard`,
     dashboardApi = supertest(dashboardBaseUrl),
-    perCallCost = common.perCallCost,
-    authorization = common.authorization;
+    perCallCost = common.perCallCost;
 
-let timeout = 1000 * 60;//set timeout as 1 minute
+let timeout = 1000 * 60; //set timeout as 1 minute
 
 before(function (done) {
     if (URL == '') {
@@ -32,7 +31,6 @@ it('should return nodes state info', function (done) {
     console.time(info("dashboard-nodes state duration"));
     dashboardApi.get('/nodes')
         .set('Accept', 'application/json')
-        .set('Authorization', authorization)
         .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
@@ -70,7 +68,6 @@ it('should return statistic of diagnostic jobs by state', function (done) {
     console.time(info("dashboard-diag jobs duration"));
     dashboardApi.get('/diagnostics')
         .set('Accept', 'application/json')
-        .set('Authorization', authorization)
         .timeout(timeout)
         .expect(200)
         .expect(function (res) {
@@ -115,7 +112,6 @@ it('should return statistic of clusrun jobs by state', function (done) {
     console.time(info("dashboard-clusurn jobs duration"));
     dashboardApi.get('/clusrun')
         .set('Accept', 'application/json')
-        .set('Authorization', authorization)
         .timeout(timeout)
         .expect(200)
         .expect(function (res) {

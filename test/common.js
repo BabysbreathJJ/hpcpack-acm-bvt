@@ -1,5 +1,5 @@
 var URL = process.env.URL ? process.env.URL : '';
-// var URL = 'https://hpcacm.eastus.azurecontainer.io/v1';
+// var URL = 'https://hpcacm.azurewebsites.net/v1';
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0;
 const addContext = require('mochawesome/addContext');
 const chalk = require('chalk');
@@ -11,13 +11,10 @@ var should = require('chai').should(),
     expect = require('chai').expect,
     assert = require('chai').assert;
 supertest = require('supertest'),
-    diagBaseUrl = `${URL}/diagnostics`,
     api = supertest(`${URL}`),
-    diagApi = supertest(diagBaseUrl),
     Loop = require('./loop.js');
 
 const perCallCost = 10000;
-const authorization = Buffer.from('root:Pass1word').toString('base64');
 
 console.log(info("The base url of rest api is: ") + `${URL}`);
 
@@ -58,6 +55,5 @@ module.exports = {
     assert: assert,
     supertest: supertest,
     Loop: Loop,
-    perCallCost: perCallCost,
-    authorization: `Basic ${authorization}`
+    perCallCost: perCallCost
 }

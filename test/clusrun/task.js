@@ -44,7 +44,6 @@ before(function (done) {
     console.time(info("clusrun task-before all hook get job list duration"));
     clusrunApi.get(`?lastid=${maxNum}&count=${jobNum}&reverse=true`)
         .set('Accept', 'application/json')
-        .set('Authorization', authorization)
         .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
@@ -89,7 +88,6 @@ it('should return task list with a specified job id', function (done) {
     console.time(info("clusrun-task list duration"));
     clusrunApi.get(`/${jobId}/tasks`)
         .set('Accept', 'application/json')
-        .set('Authorization', authorization)
         .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
@@ -132,7 +130,6 @@ it('should get detailed task info with a specified task id', function (done) {
     console.time(info("clusrun task-detailed task info duration"));
     clusrunApi.get(`/${jobId}/tasks/${taskId}`)
         .set('Accpet', 'application/json')
-        .set('Authorization', authorization)
         .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
@@ -168,7 +165,6 @@ it('should get a task result with a specified task id', function (done) {
     console.time(info("clusrun task-task result duration"));
     clusrunApi.get(`/${jobId}/tasks/${taskId}/result`)
         .set('Accept', 'application/json')
-        .set('Authorization', authorization)
         .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
@@ -206,7 +202,6 @@ it('should get the whole output of a task', function (done) {
     console.time(info("clusrun task-whole output duration"));
     outputApi.get(`/${resultKey}/raw`)
         .set('Accept', 'application/json')
-        .set('Authorization', authorization)
         .timeout(perCallCost)
         .expect(302)
         .expect(function (res) {
@@ -241,7 +236,6 @@ it('should get partial output of a task', function (done) {
     console.time(info("clusrun task-partial output duration"));
     outputApi.get(`/${resultKey}/page?offset=${outputInitOffset}&pageSize=${outputPageSize}`)
         .set('Accept', 'application/json')
-        .set('Authorization', authorization)
         .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {

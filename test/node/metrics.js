@@ -31,7 +31,6 @@ it('should return metrics categories', function (done) {
     console.time(info("node-metric category duration"));
     metircsApi.get(`/categories`)
         .set('Accept', 'application/json')
-        .set('Authorization', authorization)
         .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
@@ -62,7 +61,6 @@ it('should return metric info of a node', function (done) {
     console.time(info("node-mertic info duration"));
     metircsApi.get(`/${category}`)
         .set('Accept', 'application/json')
-        .set('Authorization', authorization)
         .timeout(perCallCost)
         .expect(200)
         .expect(function (res) {
