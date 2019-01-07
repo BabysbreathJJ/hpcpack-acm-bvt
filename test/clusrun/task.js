@@ -12,8 +12,7 @@ var expect = common.expect,
     outputBaseUrl = `${URL}/output/clusrun`,
     clusrunApi = supertest(clusrunBaseUrl),
     outputApi = supertest(outputBaseUrl),
-    perCallCost = common.perCallCost,
-    authorization = common.authorization;
+    perCallCost = common.perCallCost;
 
 
 let jobId = -1;
@@ -28,8 +27,8 @@ before(function (done) {
     console.log(title("\nBefore all hook of clusrun task: "));
     addContext(this, `Config ${perCallCost} ms as the timeout value of every api call.`);
     addContext(this, {
-        title: 'diag list base url: ',
-        value: `${diagBaseUrl}`
+        title: 'clusrun task base url: ',
+        value: `${clusrunBaseUrl}`
     });
 
     if (URL == '') {
