@@ -19,6 +19,6 @@
   },
   "scripts": {
     "prestart": "npm install",
-    "start": "mocha test/bvt.js --recusive --reporter mochawesome"
+    "start": "mocha test/bvt.js --recusive --reporter mochawesome --reporter-options reportTitle=hpcpack-acm-bvt"
   }
 }

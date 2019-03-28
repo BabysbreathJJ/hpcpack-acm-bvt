@@ -20,7 +20,7 @@ function importTest(name, path) {
 
 
 
-describe("hpc-acm-bvt", function () {
+describe("E2E Test Reports", function () {
     importTest('Dashboard', './dashboard/dashboard');
     importTest('Node-list', './node/node-list');
     importTest('Node', './node/node');
