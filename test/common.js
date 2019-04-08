@@ -1,5 +1,5 @@
 var URL = process.env.URL ? process.env.URL : '';
-// var URL = 'https://hpcacm.azurewebsites.net/v1';
+// var URL = 'https://hpcpackacm.azurewebsites.net/v1';
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0;
 const addContext = require('mochawesome/addContext');
 const chalk = require('chalk');

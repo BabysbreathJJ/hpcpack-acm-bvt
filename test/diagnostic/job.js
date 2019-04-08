@@ -459,12 +459,50 @@ it('should create a new ring diag test', function (done) {
         });
 })
 
+it('should create a new pingpong diag test to cancel', function (done) {
+    console.log(title("\nshould create a new pingpong diag test to cancel:"));
+    let self = this;
+    console.time(info("diag job-new pingpong duration"));
+    diagApi.post('')
+        .set('Accept', 'application/json')
+        .timeout(perCallCost)
+        .send({
+            name: 'BVT-pingpong-test' + getTime(),
+            targetNodes: nodes,
+            jobType: 'diagnostics',
+            diagnosticTest: pingpong
+        })
+        .expect(201)
+        .expect(function (res) {
+            console.log(info("New pingpong job location: ") + res.headers.location);
+            addContext(self, {
+                title: 'New pingpong job location',
+                value: res.headers.location
+            });
+            expect(res.headers.location).to.include('/v1/diagnostics/');
+            let locationData = res.headers.location.split('/');
+            pingpongJobId = locationData[locationData.length - 1];
+        })
+        .end((err, res) => {
+            if (err) {
+                handleError(err, self);
+                return done(err);
+            }
+            done();
+            console.timeEnd(info("diag job-new pingpong duration"));
+        });
+})
+
 it('should cancel a diag test', function (done) {
     console.log(title("\nshould cancel diag test:"));
-    console.log(info("The job id to cancel is ") + ringJobId);
+    console.log(info("The job id to cancel is ") + pingpongJobId);
     let self = this;
+    addContext(self, {
+        title: 'The cancel job id',
+        value: pingpongJobId
+    });
     console.time(info("diag job-cancel diag duration"));
-    diagApi.patch(`/${ringJobId}`)
+    diagApi.patch(`/${pingpongJobId}`)
         .set('Accept', 'application/json')
         .timeout(perCallCost)
         .send({

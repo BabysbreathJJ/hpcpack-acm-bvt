@@ -3,6 +3,7 @@ var URL = common.URL;
 const addContext = common.addContext;
 const info = common.info;
 const title = common.title;
+const interval = 5000;
 var expect = common.expect,
     assert = common.assert,
     supertest = common.supertest,
@@ -14,6 +15,7 @@ var expect = common.expect,
 
 let nodes = [];
 let clusrunJobId = -1;
+let estimatedJobFinishTime = 30000;
 
 before(function (done) {
     console.log(title(`\nBefore all hook of clusrun job:`));
@@ -226,4 +228,147 @@ it('should return detailed info with a specified clusrun job id', function (done
             done();
             console.timeEnd(info("clusrun-job detailed info duration"));
         })
+})
+
+it('should create a simple command line clusrun job', function (done) {
+    console.log(title("\nshould create a somple command line clusrun job"));
+    let self = this;
+    console.time(info("clusrun-create a simple command line clusrun job duration"));
+    clusrunApi.post('')
+        .set('Accept', 'application/json')
+        .timeout(perCallCost)
+        .send({
+            commandLine: "hostname",
+            targetNodes: nodes
+        })
+        .expect(201)
+        .expect(function (res) {
+            console.log(info('New clusrun job location: ') + res.headers.location);
+            addContext(self, {
+                title: 'New clusrun job location',
+                value: res.headers.location
+            });
+            expect(res.headers.location).to.include('/clusrun/');
+            let locationData = res.headers.location.split('/');
+            clusrunJobId = locationData[locationData.length - 1];
+        })
+        .end(function (err, res) {
+            if (err) {
+                handleError(err, self);
+                return done(err);
+            }
+            done();
+            console.timeEnd(info("clusrun-create a simple command line clusrun job duration"));
+        })
+})
+
+
+it('should get simple command line result before timeout', function (done) {
+    let timeout = nodes.length * estimatedJobFinishTime;
+    let maxTime = new Date().getTime() + timeout;
+    let self = this;
+    console.log(info(`Timeout for clusrun job is: ${timeout} ms.`));
+    console.log(info(`Job progress  (get state every ${interval} ms): `));
+    addContext(this, `Job timeout set to ${timeout} ms`);
+    addContext(this, `Job progress (get state every 1000 ms)`);
+    console.time(info("clurun job-hostname result duration"));
+    let loop = Loop.start(
+        clusrunBaseUrl + '/' + clusrunJobId,
+        perCallCost, {
+            next: function (res, err) {
+                let endTime = new Date().getTime();
+                if (err) {
+                    console.log(err);
+                    if (err.code == 'ETIMEDOUT' && endTime < maxTime) {
+                        return true;
+                    }
+                    handleError(err, self);
+                    console.timeEnd(info("clurun job-hostname result duration"));
+                    done(err);
+                    return false;
+                }
+
+                result = res.body;
+                result = JSON.parse(result);
+                pingpongJobState = result.state;
+                console.log(info("Job state: ") + result.state);
+                addContext(self, {
+                    title: 'Job state',
+                    value: result.state
+                });
+                if (result.state == 'Finished') {
+                    console.log(info(`Job ends with Finished in ${maxTime - endTime} ms`));
+                    console.log(info(`The result returned when job finished is:`));
+                    console.log(JSON.stringify(result, null, "  "));
+                    addContext(self, {
+                        title: 'Cost time',
+                        value: `Job ends with Finished in ${maxTime - endTime} ms`
+                    });
+                    addContext(self, {
+                        title: 'Final result',
+                        value: result
+                    });
+                    assert.ok(result.state === 'Finished', `clusrun get hostname job is finished in ${maxTime - endTime} ms.`);
+                    console.timeEnd(info("clurun job-hostname result duration"));
+                    done();
+                    return false;
+                } else if (result.state == 'Failed') {
+                    console.log(info(`Job ends with Failed in ${maxTime - endTime} ms`));
+                    console.log(info(`The result returned when job failed is:`));
+                    console.log(JSON.stringify(result, null, "  "));
+                    addContext(self, {
+                        title: 'Cost time',
+                        value: `Job ends with Failed in ${maxTime - endTime} ms`
+                    });
+                    addContext(self, {
+                        title: 'Final result',
+                        value: result
+                    });
+                    assert.ok(result.state === 'Failed', `clusrun get hostname job is failed in ${maxTime - endTime} ms.`);
+                    console.timeEnd(info("clurun job-hostname result duration"));
+                    done();
+                    return false;
+                } else if (result.state == 'Canceled') {
+                    console.log(info(`Job ends with Canceled in ${maxTime - endTime} ms`));
+                    console.log(info(`The result returned when job canceled is:`));
+                    console.log(JSON.stringify(result, null, "  "));
+                    addContext(self, {
+                        title: 'Cost time',
+                        value: `Job ends with Canceled in ${maxTime - endTime} ms`
+                    });
+                    addContext(self, {
+                        title: 'Final result',
+                        value: result
+                    });
+                    assert.ok(result.state === 'Canceled', `clusrun get hostname job is canceled in ${maxTime - endTime} ms.`);
+                    console.timeEnd(info("clurun job-hostname result duration"));
+                    done();
+                    return false;
+                }
+
+                if (endTime >= maxTime) {
+                    console.log(info(`The result returned when job timeout is:`));
+                    console.log(JSON.stringify(result, null, "  "));
+                    addContext(self, {
+                        title: 'Cost time',
+                        value: `Test ends with timeout in ${maxTime - endTime > 0 ? maxTime - endTime : (endTime - maxTime + timeout)} ms`
+                    });
+                    addContext(self, {
+                        title: 'Job result when timeout',
+                        value: result
+                    });
+                    try {
+                        assert.fail(`actual runtime ${maxTime - endTime > 0 ? maxTime - endTime : (endTime - maxTime + timeout)} ms`, "expected time " + timeout + ' ms', `The clusrun get hostname job doesn't finished in expected time, time elapses: ${maxTime - endTime > 0 ? maxTime - endTime : (endTime - maxTime + timeout)} ms`, `the max time is ${timeout} ms`);
+                    } catch (error) {
+                        handleError(error, self);
+                        done(error);
+                        console.timeEnd(info("clurun job-hostname result duration"));
+                    }
+                    return false;
+                }
+                return true;
+            }
+        },
+        interval
+    );
 })
