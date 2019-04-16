@@ -1,0 +1,25 @@
+pool:
+  name: Hosted Ubuntu 1604
+steps:
+- task: NodeTool@0
+  displayName: 'Use Node 8.x'
+  inputs:
+    versionSpec: 8.x
+    checkLatest: true
+
+- task: DownloadSecureFile@1
+  displayName: 'Download secure file'
+  inputs:
+    secureFile: 'eef494b5-38a5-4816-9303-cf53ea2ba124'
+
+- script: |
+   URL=https://hpcpackacm.azurewebsites.net/v1 npm start
+   cp $(Agent.TempDirectory)/web.config $(System.DefaultWorkingDirectory)/mochawesome-report/
+  displayName: 'Command Line Script'
+  continueOnError: true
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: BVT-result'
+  inputs:
+    PathtoPublish: '$(System.DefaultWorkingDirectory)/mochawesome-report/'
+    ArtifactName: 'BVT-result'
